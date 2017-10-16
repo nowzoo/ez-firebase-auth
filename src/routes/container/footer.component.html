@@ -1,0 +1,11 @@
+<hr>
+<p class="text-right">
+  <small class="text-muted" *ngIf="user">
+    Signed in as {{user.email}} <br>
+    <a routerLink="./account">Account</a> |
+    <a routerLink="./sign-out">Sign Out</a>
+  </small>
+  <small class="text-muted" *ngIf="!user">
+    <a routerLink="./sign-in">Sign In</a>
+  </small>
+</p>

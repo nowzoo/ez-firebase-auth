@@ -1,0 +1,93 @@
+<div *ngIf="user">
+  <div class="alert alert-light" role="alert" [ngSwitch]="redirect">
+    <span *ngSwitchCase="'change-password'">
+      Please sign in again to change your password.
+    </span>
+    <span *ngSwitchCase="'change-email'">
+      Please sign in again to change your email.
+    </span>
+    <span *ngSwitchCase="'add-password'">
+      Please sign in again to add a password to your account.
+    </span>
+    <span *ngSwitchDefault>
+      Please sign in again.
+    </span>
+  </div>
+  <div *ngIf="oAuthProviderIds.length > 0">
+    <p *ngFor="let id of oAuthProviderIds">
+      <button
+        [sfaProviderTitle]="{label: 'Sign in with', id: id}"
+        (click)="oAuthReauth(id)" class="btn btn-outline-primary btn-lg btn-block">
+        Sign In with
+        <sfa-provider-icon [providerId]="id"></sfa-provider-icon>
+        <sfa-provider-label [providerId]="id"></sfa-provider-label>
+      </button>
+    </p>
+    <p *ngIf="unhandledOAuthError">
+      <i class="fa fa-fw fa-warning text-danger" aria-hidden="true"></i>
+      Error: {{unhandledOAuthError.code}}
+    </p>
+
+  </div>
+  <div *ngIf="hasEmailProvider">
+    <h6 class="card-subtitle mb-2 text-muted" *ngIf="oAuthProviderIds.length > 0">
+      Sign in with your email and password...
+    </h6>
+    <form [formGroup]="fg" (ngSubmit)="emailReauth()">
+      <div class="form-group">
+        <label [attr.for]="id + 'email'">Email Address</label>
+        <input
+          type="email"
+          class="form-control"
+          placeholder="Email Address"
+          [attr.id]="id + 'email'"
+          [sfaInvalidInput]="fg.get('email')"
+          formControlName="email">
+      </div><!-- email fg -->
+      <div class="form-group">
+        <label [attr.for]="id + 'password'">
+          Password
+        </label>
+        <sfa-toggleable-password [control]="passwordInput">
+          <input
+            #passwordInput
+            [attr.id]="id + 'password'"
+            class="form-control"
+            [sfaInvalidInput]="fg.get('password')"
+            placeholder="Password"
+            type="password"
+            [attr.aria-describedby]="id + 'passwordHelp'"
+            formControlName="password">
+        </sfa-toggleable-password>
+        <div [sfaInvalidFeedback]="fg.get('password')" key="required">
+          Required.
+        </div>
+        <div [sfaInvalidFeedback]="fg.get('password')" key="auth/wrong-password">
+          Wrong password.
+        </div>
+        <small [attr.id]="id + 'passwordHelp'"  class="form-text text-muted">
+          <a routerLink="../send-reset-password-link" [queryParams]="{email: fg.get('email').value}">Forgot?</a>
+        </small>
+      </div> <!-- password form-group -->
+      <div class="form-group text-right">
+        <button
+          type="submit"
+          [disabled]="submitting || fg.invalid"
+          class="btn"
+          [class.btn-outline-dark]="fg.invalid"
+          [class.btn-outline-success]="!fg.invalid">
+          <i class="fa fa-fw fa-sign-in" aria-hidden="true"></i>
+          Sign In
+        </button>
+        <p *ngIf="submitting">
+          <i class="fa fa-fw fa-spin fa-refresh" aria-hidden="true"></i>
+          Signing you in...
+        </p>
+        <p *ngIf="unhandledEmailError">
+          <i class="fa fa-fw fa-warning text-danger" aria-hidden="true"></i>
+          Error: {{unhandledEmailError.code}}
+        </p>
+      </div><!-- submit -->
+    </form>
+  </div>
+</div>

@@ -1,0 +1,65 @@
+
+<div *ngIf="user">
+    <form [formGroup]="fg" (ngSubmit)="submit()" *ngIf="! success">
+      <div class="form-group">
+        <label [attr.for]="id + 'email'">
+          New Email
+        </label>
+        <input
+          [attr.id]="id + 'email'"
+          class="form-control"
+          [sfaInvalidInput]="fg.get('email')"
+          placeholder="New Email"
+          type="email"
+          [attr.aria-describedby]="id + 'emailHelp'"
+          formControlName="email">
+        <div [sfaInvalidFeedback]="fg.get('email')" key="required">
+          Required.
+        </div>
+        <div [sfaInvalidFeedback]="fg.get('email')" [key]="['auth/invalid-email', 'email']">
+          Invalid email address.
+        </div>
+        <div [sfaInvalidFeedback]="fg.get('email')" key="auth/email-already-in-use">
+          That email is already in use.
+        </div>
+        <div [sfaInvalidFeedback]="fg.get('email')" key="same">
+          That’s the same as your current email.
+        </div>
+
+        <small [attr.id]="id + 'emailHelp'"  class="form-text text-muted">
+          Your current email is {{user.email}}.
+        </small>
+      </div> <!-- password form-group -->
+      <div class="form-group text-right">
+        <button
+          type="submit"
+          [disabled]="submitting || fg.invalid"
+          class="btn"
+          [class.btn-outline-dark]="fg.invalid"
+          [class.btn-outline-success]="!fg.invalid">
+          <i class="fa fa-fw fa-save" aria-hidden="true"></i>
+          Change Email
+        </button>
+        <p *ngIf="submitting">
+          <i class="fa fa-fw fa-spin fa-refresh" aria-hidden="true"></i>
+          Changing account email...
+        </p>
+        <p *ngIf="unhandledError">
+          <i class="fa fa-fw fa-warning text-danger" aria-hidden="true"></i>
+          Error: {{unhandledError.code}}
+        </p>
+      </div>
+    </form>
+
+    <div *ngIf="success">
+      <div class="alert alert-success" role="alert">
+        Your email has been changed to {{user.email}}.
+      </div>
+      <p>
+        <a routerLink="../account" class="btn btn-secondary btn-block">
+          Back to Account
+        </a>
+      </p>
+    </div>
+
+</div>

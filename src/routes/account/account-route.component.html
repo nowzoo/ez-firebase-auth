@@ -1,0 +1,30 @@
+<div *ngIf="user">
+
+  <div *ngIf="user.displayName">
+    <h6 class="text-muted mb-1">Name</h6>
+    <p>{{user.displayName}}</p>
+  </div>
+  <h6 class="text-muted mb-1">Email</h6>
+  <p>
+    {{user.email}}
+    <span class="badge badge-success" *ngIf="user.emailVerified">
+      <i class="fa fa-fw fa-check" aria-hidden="true"></i>
+      Verified
+    </span>
+    <span  *ngIf="!user.emailVerified">
+      <a routerLink="../send-email-verification-link">Verify</a>
+    </span>
+  </p>
+
+  <h6 class="text-muted mb-1">Sign In Methods</h6>
+  <div class="mb-3">
+    <sfa-sign-in-methods></sfa-sign-in-methods>
+  </div>
+  <sfa-persistence-form></sfa-persistence-form>
+
+
+  <p class="text-right mb-0">
+    <a routerLink="../sign-out">Sign Out</a>
+  </p>
+
+</div>
