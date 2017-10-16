@@ -1,10 +1,10 @@
 {
-    "name": "angular-library-starter",
+    "name": "simple-firebase-auth",
     "version": "0.0.1",
     "description": "Build an Angular library compatible with AoT compilation and Tree shaking",
-    "main": "./bundles/angular-library-starter.umd.js",
-    "module": "./modules/angular-library-starter.es5.js",
-    "es2015": "./modules/angular-library-starter.js",
+    "main": "./bundles/simple-firebase-auth.umd.js",
+    "module": "./modules/simple-firebase-auth.es5.js",
+    "es2015": "./modules/simple-firebase-auth.js",
     "scripts": {
         "build": "node build.js",
         "test": "karma start",
@@ -14,16 +14,16 @@
         "compodoc": "compodoc -p tsconfig.json",
         "compodoc-serve": "compodoc -s"
     },
-    "typings": "./angular-library-starter.d.ts",
+    "typings": "./simple-firebase-auth.d.ts",
     "author": "",
     "repository": {
         "type": "git",
-        "url": "https://github.com/robisim74/angular-library-starter.git"
+        "url": "https://github.com/nowzoo/simple-firebase-auth.git"
     },
     "bugs": {
-        "url": "https://github.com/robisim74/angular-library-starter/issues"
+        "url": "https://github.com/nowzoo/simple-firebase-auth/issues"
     },
-    "homepage": "https://github.com/robisim74/angular-library-starter",
+    "homepage": "https://github.com/nowzoo/simple-firebase-auth",
     "keywords": [
         "angular",
         "javascript",

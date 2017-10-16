@@ -10,11 +10,11 @@ const globals = {
 };
 
 export default {
-    entry: './dist/modules/angular-library-starter.es5.js',
-    dest: './dist/bundles/angular-library-starter.umd.js',
+    entry: './dist/modules/simple-firebase-auth.es5.js',
+    dest: './dist/bundles/simple-firebase-auth.umd.js',
     format: 'umd',
     exports: 'named',
-    moduleName: 'ng.angularLibraryStarter',
+    moduleName: 'ng.simpleFirebaseAuth',
     plugins: [resolve()],
     external: Object.keys(globals),
     globals: globals,
