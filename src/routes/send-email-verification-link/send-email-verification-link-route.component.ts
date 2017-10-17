@@ -10,33 +10,35 @@ import { SimpleFirebaseAuthService } from '../../simple-firebase-auth.service';
   styleUrls: ['./send-email-verification-link-route.component.scss']
 })
 export class SendEmailVerificationLinkRouteComponent implements OnInit, OnDestroy {
-  private ngUnsubscribe: Subject<void> = new Subject<void>();
-  screen:  'form' | 'success' | 'alreadyVerified' = 'form';
-  user: firebase.User;
-  submitting: boolean = false;
-  error: firebase.FirebaseError = null;
+
+  public screen: 'form' | 'success' | 'alreadyVerified' = 'form';
+  public user: firebase.User;
+  public submitting: boolean = false;
+  public error: firebase.FirebaseError | null = null;
+  protected ngUnsubscribe: Subject<void> = new Subject<void>();
+
   constructor(
     protected authService: SimpleFirebaseAuthService
   ) { }
 
-  ngOnDestroy(){
+  public ngOnDestroy() {
     this.ngUnsubscribe.next();
     this.ngUnsubscribe.complete();
   }
-  ngOnInit() {
+  public ngOnInit() {
     this.authService.onRouteNext('send-email-verification-link');
     this.authService.authState.takeUntil(this.ngUnsubscribe).subscribe((user: firebase.User) => {
       this.user = user;
-      if (! this.user){
+      if (! this.user) {
         this.authService.navigate('sign-in');
       }
       if (this.user.emailVerified) {
         this.screen = 'alreadyVerified';
       }
-    })
+    });
   }
 
-  submit() {
+  public submit() {
     this.submitting = true;
     this.error = null;
     this.user.sendEmailVerification()
@@ -47,10 +49,7 @@ export class SendEmailVerificationLinkRouteComponent implements OnInit, OnDestro
       .catch((error: firebase.FirebaseError) => {
         this.error = error;
         this.screen = 'form';
-      })
-  }
-  reset() {
-
+      });
   }
 
 }

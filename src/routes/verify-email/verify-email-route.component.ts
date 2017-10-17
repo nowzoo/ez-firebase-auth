@@ -11,23 +11,26 @@ import { OUT_OF_BAND_MODES } from '../simple-firebase-auth-routes';
   styleUrls: ['./verify-email-route.component.scss']
 })
 export class VerifyEmailRouteComponent implements OnInit, OnDestroy {
-  private ngUnsubscribe: Subject<void> = new Subject<void>();
-  screen: 'wait'|'success'|'error' = 'wait';
-  oobCode: string;
-  email: string = null;
-  error: firebase.FirebaseError = null;
-  user: firebase.User = null;
+
+  public screen: 'wait'|'success'|'error' = 'wait';
+  public oobCode: string;
+  public email: string | null = null;
+  public error: firebase.FirebaseError | null = null;
+  public user: firebase.User | null = null;
+
+  protected ngUnsubscribe: Subject<void> = new Subject<void>();
+
   constructor(
-    private authService: SimpleFirebaseAuthService,
-    private route: ActivatedRoute
+    protected authService: SimpleFirebaseAuthService,
+    protected route: ActivatedRoute
   ) { }
 
-  ngOnDestroy(){
+  public ngOnDestroy() {
     this.ngUnsubscribe.next();
     this.ngUnsubscribe.complete();
   }
 
-  ngOnInit() {
+  public ngOnInit() {
     this.authService.onRouteNext('verify-email');
     const mode = this.route.snapshot.queryParams.mode || null;
     this.oobCode = this.route.snapshot.queryParams.oobCode || null;
@@ -38,10 +41,10 @@ export class VerifyEmailRouteComponent implements OnInit, OnDestroy {
 
     this.authService.authState.takeUntil(this.ngUnsubscribe).subscribe((user: firebase.User) => {
       this.user = user;
-    })
+    });
     this.authService.auth.checkActionCode(this.oobCode)
-      .then((info: firebase.auth.ActionCodeInfo) => {
-        this.email = info['data']['email'];
+      .then((info: any) => {
+        this.email = info.data.email;
         return this.authService.auth.applyActionCode(this.oobCode);
       })
       .then(() => {

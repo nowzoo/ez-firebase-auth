@@ -1,7 +1,7 @@
 export class SimpleFirebaseAuthProviderLabels {
-  password?: string = 'Email/Password';
-  'twitter.com'?: string = 'Twitter';
-  'facebook.com'?: string = 'Facebook';
-  'github.com'?: string = 'GitHub';
-  'google.com'?: string = 'Google';
+  public 'password'?: string = 'Email/Password';
+  public 'twitter.com'?: string = 'Twitter';
+  public 'facebook.com'?: string = 'Facebook';
+  public 'github.com'?: string = 'GitHub';
+  public 'google.com'?: string = 'Google';
 }

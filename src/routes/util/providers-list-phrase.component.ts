@@ -1,26 +1,27 @@
 import { Component, OnInit, OnChanges, Input } from '@angular/core';
-import * as _ from 'lodash';
+import * as _ from '../../lodash-funcs';
 import { SimpleFirebaseAuthService } from '../../simple-firebase-auth.service';
 @Component({
   selector: 'sfa-providers-list-phrase',
   template: `{{phrase}}`,
 })
-export class ProvidersListPhrase implements OnInit {
-  @Input() providerIds: string[];
-  @Input() andOr: string;
-  phrase: string;
+export class ProvidersListPhraseComponent implements OnInit {
+  @Input() public providerIds: string[];
+  @Input() public andOr: string;
+  public phrase: string;
 
   constructor(
     protected authService: SimpleFirebaseAuthService
   ) { }
 
-  ngOnInit() {
-    let labels: string[] = _.compact(_.map(this.providerIds, id => {
-      return this.authService.providerLabels[id] || null
+  public ngOnInit() {
+    const labels = this.authService.providerLabels as any;
+    const included: string[] = _.compact(_.map(this.providerIds, (id) => {
+      return labels[id] || null;
     }));
-    let last = labels.pop();
-    if (labels.length) {
-      this.phrase = labels.join(', ') + ' ' + this.andOr + ' ' + last;
+    const last = included.pop();
+    if (included.length) {
+      this.phrase = included.join(', ') + ' ' + this.andOr + ' ' + last;
     } else {
       if (last) {
         this.phrase = last;

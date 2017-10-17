@@ -15,8 +15,7 @@
             true,
             "attribute",
             [
-                "dir-prefix1",
-                "dir-prefix2"
+                "sfa"
             ],
             "camelCase"
         ],
@@ -24,8 +23,7 @@
             true,
             "element",
             [
-                "cmp-prefix1",
-                "cmp-prefix2"
+                "sfa"
             ],
             "kebab-case"
         ],
@@ -59,6 +57,8 @@
         "ordered-imports": [
             false
         ],
+        "object-literal-shorthand": [false],
+        "object-literal-sort-keys": [false],
         "quotemark": [
             false
         ],

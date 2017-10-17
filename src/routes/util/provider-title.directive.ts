@@ -5,7 +5,7 @@ import { SimpleFirebaseAuthService } from '../../simple-firebase-auth.service';
   selector: '[sfaProviderTitle]'
 })
 export class ProviderTitleDirective implements OnInit {
-  @Input() sfaProviderTitle: {label: string, id: string};
+  @Input() public sfaProviderTitle: {label: string, id: string};
 
   constructor(
     protected renderer: Renderer2,
@@ -13,8 +13,9 @@ export class ProviderTitleDirective implements OnInit {
     protected authService: SimpleFirebaseAuthService
 
   ) { }
-  ngOnInit () {
-    let title = this.sfaProviderTitle.label + ' ' + this.authService.providerLabels[this.sfaProviderTitle.id]
-    this.renderer.setAttribute(this.elementRef.nativeElement, 'title', title )
+  public ngOnInit() {
+    const labels = this.authService.providerLabels as any;
+    const title = this.sfaProviderTitle.label + ' ' + labels[this.sfaProviderTitle.id];
+    this.renderer.setAttribute(this.elementRef.nativeElement, 'title', title);
   }
 }

@@ -1,10 +1,10 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { Subject } from 'rxjs/Subject';
-import * as _ from 'lodash';
+import * as _ from '../../lodash-funcs';
 import * as firebase from 'firebase';
 import { SimpleFirebaseAuthService } from '../../simple-firebase-auth.service';
-import { AuthUserEvent} from '../../simple-firebase-auth';
+import { IAuthUserEvent} from '../../auth-user-event.interface';
 
 @Component({
   selector: 'sfa-unlink-route',
@@ -12,24 +12,26 @@ import { AuthUserEvent} from '../../simple-firebase-auth';
   styleUrls: ['./unlink-route.component.scss']
 })
 export class UnlinkRouteComponent implements OnInit, OnDestroy {
-  private ngUnsubscribe: Subject<void> = new Subject<void>();
-  user: firebase.User = null;
-  providerId: string = null;
-  screen: 'wait'|'form' = 'wait';
-  submitting: boolean = false;
-  unhandledError: firebase.FirebaseError = null;
+
+  public user: firebase.User | null = null;
+  public providerId: string | null = null;
+  public screen: 'wait'|'form' = 'wait';
+  public submitting: boolean = false;
+  public unhandledError: firebase.FirebaseError | null = null;
+
+  protected ngUnsubscribe: Subject<void> = new Subject<void>();
 
   constructor(
-    private authService: SimpleFirebaseAuthService,
-    private route: ActivatedRoute,
+    protected authService: SimpleFirebaseAuthService,
+    protected route: ActivatedRoute,
   ) { }
 
-  ngOnDestroy(){
+  public ngOnDestroy() {
     this.ngUnsubscribe.next();
     this.ngUnsubscribe.complete();
   }
 
-  ngOnInit() {
+  public ngOnInit() {
     this.providerId = this.route.snapshot.queryParams.providerId || null;
 
     this.authService.authState.takeUntil(this.ngUnsubscribe).subscribe((user: firebase.User) => {
@@ -43,24 +45,24 @@ export class UnlinkRouteComponent implements OnInit, OnDestroy {
         return;
       }
       const provider = _.find(user.providerData, {providerId: this.providerId}) || null;
-      if (! provider){
+      if (! provider) {
         this.authService.navigate('account');
         return;
       }
       this.screen = 'form';
-    })
+    });
   }
 
-  submit() {
+  public submit() {
     this.submitting = true;
     this.unhandledError = null;
-    this.user.unlink(this.providerId)
-      .then((event: AuthUserEvent) => {
+    const user = this.user as firebase.User;
+    user.unlink(this.providerId as string)
+      .then((event: IAuthUserEvent) => {
         this.authService.navigate('account');
       })
       .catch((error: firebase.FirebaseError) => {
         this.unhandledError = error;
-      })
+      });
   }
-
 }

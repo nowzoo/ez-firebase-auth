@@ -21,18 +21,15 @@ import { Component, Input, ElementRef, Renderer2 } from '@angular/core';
   `
 })
 export class ToggleablePasswordComponent  {
-
-  @Input() control: ElementRef;
-  visible: boolean = false;
+  @Input() public control: ElementRef;
+  public visible: boolean = false;
   constructor(
-    private renderer: Renderer2
+    protected renderer: Renderer2
   ) { }
 
-
-  toggle() {
+  public toggle() {
     this.visible = ! this.visible;
     const type = this.visible ? 'text' : 'password';
     this.renderer.setAttribute(this.control, 'type', type);
   }
-
 }

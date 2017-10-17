@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import 'rxjs/add/operator/take';
-import * as _ from 'lodash';
+import * as _ from '../../lodash-funcs';
 import { SimpleFirebaseAuthService } from '../../simple-firebase-auth.service';
 
 @Component({
@@ -10,17 +10,16 @@ import { SimpleFirebaseAuthService } from '../../simple-firebase-auth.service';
   styleUrls: ['./sign-in-route.component.scss']
 })
 export class SignInRouteComponent implements OnInit {
-  oAuthProviderIds: string[] = [];
-  isEmailConfigured: boolean = false;
-  email: string = null;
-
+  public oAuthProviderIds: string[] = [];
+  public isEmailConfigured: boolean = false;
+  public email: string | null = null;
 
   constructor(
     private route: ActivatedRoute,
     private authService: SimpleFirebaseAuthService,
   ) { }
 
-  ngOnInit() {
+  public ngOnInit() {
     this.authService.onRouteNext('sign-in');
     this.email = this.route.snapshot.queryParams.email || '';
     this.isEmailConfigured = _.includes(this.authService.configuredProviderIds, 'password');

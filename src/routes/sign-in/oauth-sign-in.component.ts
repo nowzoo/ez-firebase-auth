@@ -1,8 +1,10 @@
 import { Component, OnInit } from '@angular/core';
-import * as _ from 'lodash';
+import * as _ from '../../lodash-funcs';
+import * as firebase from 'firebase';
 import { SimpleFirebaseAuthService } from '../../simple-firebase-auth.service';
 import { OauthService } from '../oauth.service';
-import { OAuthMethod, AuthUserEvent } from '../../simple-firebase-auth';
+import { OAuthMethod } from '../../o-auth-method.enum';
+import { IAuthUserEvent } from '../../auth-user-event.interface';
 
 @Component({
   selector: 'sfa-oauth-sign-in',
@@ -11,43 +13,43 @@ import { OAuthMethod, AuthUserEvent } from '../../simple-firebase-auth';
 })
 export class OauthSignInComponent implements OnInit {
 
-  diffCredError: any = null;
-  unhandledCredError: any = null;
-  oAuthProviderIds: string[];
+  public diffCredError: any = null;
+  public unhandledCredError: any = null;
+  public oAuthProviderIds: string[] = [];
   constructor(
     protected authService: SimpleFirebaseAuthService,
     protected oAuthService: OauthService
   ) { }
 
-  ngOnInit() {
+  public ngOnInit() {
     this.oAuthProviderIds = _.clone(this.authService.oAuthProviderIds);
     this.oAuthService.checkForSignInRedirect()
       .catch((error: any) => {
         this.handleOAuthError(error);
-      })
+      });
   }
 
-  oAuthSignIn(providerId) {
+  public oAuthSignIn(providerId: string) {
     this.diffCredError = null;
     this.unhandledCredError = null;
-    switch(this.authService.oAuthMethod) {
+    switch (this.authService.oAuthMethod) {
       case OAuthMethod.popup:
         this.oAuthService.signInWithPopup(providerId)
           .catch((error: any) => {
             this.handleOAuthError(error);
           });
-          break;
+        break;
         default:
           this.oAuthService.signInWithRedirect(providerId)
             .catch((error: firebase.FirebaseError) => {
               this.handleOAuthError(error);
-            })
-            break;
+            });
+          break;
 
     }
   }
-  handleOAuthError(error: firebase.FirebaseError) {
-    switch(error.code) {
+  protected handleOAuthError(error: firebase.FirebaseError) {
+    switch (error.code) {
       case 'auth/account-exists-with-different-credential':
         this.diffCredError = error;
         break;

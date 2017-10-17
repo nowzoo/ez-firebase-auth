@@ -4,7 +4,7 @@ import { FormBuilder, FormGroup, Validators, FormControl } from '@angular/forms'
 import { Subject } from 'rxjs/Subject';
 import 'rxjs/add/operator/take';
 import * as firebase from 'firebase';
-import * as _ from 'lodash';
+import * as _ from '../../lodash-funcs';
 import { SimpleFirebaseAuthService } from '../../simple-firebase-auth.service';
 import * as Utils from '../utils';
 
@@ -13,17 +13,17 @@ import * as Utils from '../utils';
   templateUrl: './send-reset-password-link-route.component.html',
   styleUrls: ['./send-reset-password-link-route.component.scss']
 })
-export class SendResetPasswordLinkRouteComponent implements OnInit {
+export class SendResetPasswordLinkRouteComponent implements OnInit, OnDestroy {
 
-  private ngUnsubscribe: Subject<void> = new Subject<void>();
+  public user: firebase.User | null = null;
+  public fg: FormGroup;
+  public id: string;
+  public success: boolean = false;
+  public submitting: boolean = false;
+  public unhandledError: firebase.FirebaseError | null = null;
+  public oAuthProviderIds: string[] = [];
 
-  user: firebase.User = null;
-  fg: FormGroup;
-  id: string;
-  success: boolean = false;
-  submitting: boolean = false;
-  unhandledError: firebase.FirebaseError = null;
-  oAuthProviderIds: string[] = [];
+  protected ngUnsubscribe: Subject<void> = new Subject<void>();
 
   constructor(
     protected route: ActivatedRoute,
@@ -31,52 +31,52 @@ export class SendResetPasswordLinkRouteComponent implements OnInit {
     protected authService: SimpleFirebaseAuthService
   ) { }
 
-  ngOnDestroy(){
+  public ngOnDestroy() {
     this.ngUnsubscribe.next();
     this.ngUnsubscribe.complete();
   }
 
-  ngOnInit() {
+  public ngOnInit() {
     this.authService.onRouteNext('send-reset-password-link');
     this.id = _.uniqueId('sfa-send-reset-password-link');
     this.fg = this.fb.group({
       email: ['', [Validators.required, Utils.validateEmail]]
-    })
+    });
+    const emailFc = this.fg.get('email') as FormControl;
     this.authService.authState.take(1).subscribe((user: firebase.User) => {
       let email = this.route.snapshot.queryParams.email || '';
       if (! email) {
         email = user ? user.email : '';
       }
-      this.fg.get('email').setValue(email);
-
-      this.fg.get('email').valueChanges.takeUntil(this.ngUnsubscribe).subscribe(() => {
-        Utils.clearControlErrors(this.fg.get('email'), ['auth/invalid-email', 'auth/user-not-found'])
-      })
-    })
-
+      emailFc.setValue(email);
+      emailFc.valueChanges.takeUntil(this.ngUnsubscribe).subscribe(() => {
+        Utils.clearControlErrors(emailFc, ['auth/invalid-email', 'auth/user-not-found']);
+      });
+    });
   }
 
-  submit() {
+  public submit() {
     this.unhandledError = null;
     this.submitting = true;
-    const email = _.trim(this.fg.get('email').value);
+    const emailFc = this.fg.get('email') as FormControl;
+    const email = _.trim(emailFc.value);
     this.authService.auth.fetchProvidersForEmail(email)
       .then((providerIds: string[]) => {
         return new Promise((resolve, reject) => {
           if (providerIds.length === 0) {
-            return reject({code: 'auth/user-not-found'})
+            return reject({code: 'auth/user-not-found'});
           }
           if (! _.includes(providerIds, 'password')) {
-            this.oAuthProviderIds = _.filter(providerIds, id => {
+            this.oAuthProviderIds = _.filter(providerIds, (id) => {
               return id !== 'password';
-            })
-            return reject({code: 'no-password'})
+            });
+            return reject({code: 'no-password'});
           }
           return resolve();
-        })
+        });
       })
       .then(() => {
-        this.authService.auth.sendPasswordResetEmail(email)
+        return this.authService.auth.sendPasswordResetEmail(email);
       })
       .then(() => {
         this.submitting = false;
@@ -87,18 +87,16 @@ export class SendResetPasswordLinkRouteComponent implements OnInit {
         switch (error.code) {
           case 'auth/invalid-email':
           case 'auth/user-not-found':
-          case 'auth/no-password':
-            this.fg.get('email').setErrors(Utils.firebaseToFormError(error));
+          case 'no-password':
+            emailFc.setErrors(Utils.firebaseToFormError(error));
             break;
           default:
             this.unhandledError = error;
             break;
         }
-      })
-
+      });
   }
-  reset() {
+  public reset() {
     this.success = false;
   }
-
 }

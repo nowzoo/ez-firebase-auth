@@ -7,12 +7,12 @@ import { SimpleFirebaseAuthService } from '../../simple-firebase-auth.service';
 })
 export class ApplicationLabelComponent implements OnInit {
 
-  label: string;
+  public label: string;
   constructor(
     private authService: SimpleFirebaseAuthService
   ) { }
 
-  ngOnInit() {
+  public ngOnInit() {
     this.label = this.authService.applicationLabel;
   }
 

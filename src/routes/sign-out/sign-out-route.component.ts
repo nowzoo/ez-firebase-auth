@@ -7,12 +7,12 @@ import { SimpleFirebaseAuthService } from '../../simple-firebase-auth.service';
 })
 export class SignOutRouteComponent implements OnInit {
 
-  screen: 'wait'|'success' = 'wait';
+  public screen: 'wait'|'success' = 'wait';
   constructor(
     protected authService: SimpleFirebaseAuthService
   ) { }
 
-  ngOnInit() {
+  public ngOnInit() {
     this.authService.onRouteNext('sign-out');
     this.authService.auth.signOut()
       .then(() => {
@@ -20,5 +20,4 @@ export class SignOutRouteComponent implements OnInit {
         this.authService.onSignedOutNext();
       });
   }
-
 }

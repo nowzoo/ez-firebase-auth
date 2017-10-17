@@ -1,10 +1,10 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators, FormControl } from '@angular/forms';
 import { Subject } from 'rxjs/Subject';
 import 'rxjs/add/operator/take';
 import * as firebase from 'firebase';
-import * as _ from 'lodash';
+import * as _ from '../../lodash-funcs';
 import { SimpleFirebaseAuthService } from '../../simple-firebase-auth.service';
 import * as Utils from '../utils';
 import { OUT_OF_BAND_MODES } from '../simple-firebase-auth-routes';
@@ -14,20 +14,20 @@ import { OUT_OF_BAND_MODES } from '../simple-firebase-auth-routes';
   templateUrl: './reset-password-route.component.html',
   styleUrls: ['./reset-password-route.component.scss']
 })
-export class ResetPasswordRouteComponent implements OnInit {
+export class ResetPasswordRouteComponent implements OnInit, OnDestroy {
 
-  private ngUnsubscribe: Subject<void> = new Subject<void>();
+  public screen: 'wait' | 'form' | 'error' | 'success' = 'wait';
 
-  screen: 'wait' | 'form' | 'error' | 'success' = 'wait';
+  public user: firebase.User | null = null;
+  public fg: FormGroup;
+  public submitting: boolean = false;
+  public unhandledError: firebase.FirebaseError | null = null;
+  public oAuthProviderIds: string[] = [];
+  public oobCode: string;
+  public email: string | null = null;
+  public linkError: firebase.FirebaseError | null = null;
 
-  user: firebase.User = null;
-  fg: FormGroup;
-  submitting: boolean = false;
-  unhandledError: firebase.FirebaseError = null;
-  oAuthProviderIds: string[] = [];
-  oobCode: string;
-  email: string = null;
-  linkError: firebase.FirebaseError = null;
+  protected ngUnsubscribe: Subject<void> = new Subject<void>();
 
   constructor(
     protected route: ActivatedRoute,
@@ -35,19 +35,20 @@ export class ResetPasswordRouteComponent implements OnInit {
     protected authService: SimpleFirebaseAuthService
   ) { }
 
-  ngOnDestroy(){
+  public ngOnDestroy() {
     this.ngUnsubscribe.next();
     this.ngUnsubscribe.complete();
   }
 
-  ngOnInit() {
+  public ngOnInit() {
     this.authService.onRouteNext('reset-password');
     this.fg = this.fb.group({
       password: ['', [Validators.required]]
-    })
-    this.fg.get('password').valueChanges.takeUntil(this.ngUnsubscribe).subscribe(() => {
-      Utils.clearControlErrors(this.fg.get('password'), ['auth/weak-password'])
-    })
+    });
+    const passwordFc = this.fg.get('password') as FormControl;
+    passwordFc.valueChanges.takeUntil(this.ngUnsubscribe).subscribe(() => {
+      Utils.clearControlErrors(passwordFc, ['auth/weak-password']);
+    });
     const mode = this.route.snapshot.queryParams.mode || null;
     this.oobCode = this.route.snapshot.queryParams.oobCode || null;
     if ((mode !== OUT_OF_BAND_MODES.resetPassword) || (! this.oobCode)) {
@@ -61,19 +62,18 @@ export class ResetPasswordRouteComponent implements OnInit {
       .catch((error: firebase.FirebaseError) => {
         this.linkError = error;
         this.screen = 'error';
-      })
-
-
+      });
   }
 
-  submit() {
+  public submit() {
     this.linkError = null;
     this.unhandledError = null;
     this.submitting = true;
-    const password = this.fg.get('password').value;
+    const passwordFc = this.fg.get('password') as FormControl;
+    const password = passwordFc.value;
     this.authService.auth.confirmPasswordReset(this.oobCode, password)
       .then(() => {
-        return this.authService.emailSignIn(this.email, password)
+        return this.authService.emailSignIn(this.email as string, password);
       })
       .then((result: firebase.User) => {
         this.user = result;
@@ -91,15 +91,12 @@ export class ResetPasswordRouteComponent implements OnInit {
             this.screen = 'error';
             break;
           case 'auth/weak-password':
-            this.fg.get('password').setErrors(Utils.firebaseToFormError(error));
+            passwordFc.setErrors(Utils.firebaseToFormError(error));
             break;
           default:
             this.unhandledError = error;
             break;
         }
-      })
-
+      });
   }
-
-
 }

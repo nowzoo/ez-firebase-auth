@@ -7,40 +7,48 @@ import { Observable } from 'rxjs/Observable';
 import * as firebase from 'firebase';
 import * as _ from './lodash-funcs';
 
-
-
-import {SUPPORTED_PROVIDERS, LOCAL_PERSISTENCE_DISABLED_STORAGE_KEY} from './constants'
+import { SUPPORTED_PROVIDERS, LOCAL_PERSISTENCE_DISABLED_STORAGE_KEY } from './constants';
 import { SimpleFirebaseAuthOptions } from './simple-firebase-auth-options.class';
 import { SimpleFirebaseAuthProviderLabels } from './simple-firebase-auth-provider-labels.class';
-import { AuthEmailChangedEvent } from './auth-email-changed-event.interface';
-import { AuthUserEvent } from './auth-user-event.interface';
+import { IAuthEmailChangedEvent } from './auth-email-changed-event.interface';
+import { IAuthUserEvent } from './auth-user-event.interface';
 import { OAuthMethod } from './o-auth-method.enum';
-
-
-
-
 
 @Injectable()
 export class SimpleFirebaseAuthService {
 
-  constructor(
-    private options: SimpleFirebaseAuthOptions,
-    private router: Router,
-    private afAuth: AngularFireAuth
-  ) {
+  private settableOAuthMethod: OAuthMethod|null = null;
+  private persistenceLocal$: BehaviorSubject<boolean>;
+  private pAuthRedirectCancelled: boolean = false;
+  private onSignedIn$: Subject<IAuthUserEvent>;
+  private onSignedOut$: Subject<void>;
+  private onProviderLinked$: Subject<IAuthUserEvent>;
+  private onProviderUnlinked$: Subject<IAuthUserEvent>;
+  private onEmailChanged$: Subject<IAuthEmailChangedEvent>;
+  private onRoute$: Subject<string>;
 
+  constructor(
+    protected options: SimpleFirebaseAuthOptions,
+    protected router: Router,
+    protected afAuth: AngularFireAuth
+  ) {
+    this.persistenceLocal$ =  new BehaviorSubject(
+      localStorage.getItem(LOCAL_PERSISTENCE_DISABLED_STORAGE_KEY) === 'yes' ? false : true
+    );
+    this.onSignedIn$ = new Subject();
+    this.onSignedOut$ = new Subject<void>();
+    this.onProviderLinked$  = new Subject();
+    this.onProviderUnlinked$  = new Subject();
+    this.onEmailChanged$  = new Subject();
+    this.onRoute$  = new Subject();
   }
 
-  //*********** AUTH and AUTHSTATE *****************//
   get auth(): firebase.auth.Auth {
     return this.afAuth.auth;
   }
   get authState(): Observable<firebase.User|null> {
     return this.afAuth.authState;
   }
-
-  //*********** OPTIONS *****************//
-
   get applicationLabel(): string {
     return this.options.applicationLabel;
   }
@@ -49,27 +57,27 @@ export class SimpleFirebaseAuthService {
    * @return {string[]} [description]
    */
   get configuredProviderIds(): string[] {
-    return _.filter(this.options.configuredProviderIds, id => {
+    return _.filter(this.options.configuredProviderIds, (id) => {
       return _.includes(SUPPORTED_PROVIDERS, id);
-    })
+    });
   }
 
   get oAuthProviderIds(): string[] {
-    return _.filter(this.configuredProviderIds, id => {
+    return _.filter(this.configuredProviderIds, (id) => {
       return id !== 'password' && id !== 'phone';
-    })
+    });
   }
 
-  getProviderById(id: string): Promise<firebase.auth.AuthProvider> {
+  public getProviderById(id: string): Promise<firebase.auth.AuthProvider> {
     return new Promise((resolve, reject) => {
-      if (! _.includes(this.configuredProviderIds, id)){
+      if (! _.includes(this.configuredProviderIds, id)) {
         return reject({code: 'sfa/provider-not-configured'});
       }
       const customProvider = _.find(this.options.customizedProviders, {providerId: id});
       if (customProvider) {
         return resolve(customProvider);
       }
-      switch(id) {
+      switch (id) {
         case 'password': return resolve(new firebase.auth.EmailAuthProvider());
         case 'twitter.com': return resolve(new firebase.auth.TwitterAuthProvider());
         case 'facebook.com': return resolve(new firebase.auth.FacebookAuthProvider());
@@ -77,8 +85,7 @@ export class SimpleFirebaseAuthService {
         case 'github.com': return resolve(new firebase.auth.GithubAuthProvider());
         default: return reject({code: 'sfa/provider-not-configured'});
       }
-
-    })
+    });
   }
 
   /**
@@ -105,19 +112,18 @@ export class SimpleFirebaseAuthService {
     return this.options.sendEmailVerificationLink !== false;
   }
 
-  private _settableOAuthMethod: OAuthMethod|null = null;
   get oAuthMethod(): OAuthMethod {
-    if (this._settableOAuthMethod){
-      return this._settableOAuthMethod;
+    if (this.settableOAuthMethod) {
+      return this.settableOAuthMethod;
     }
-    if (_.has(this.options, 'oAuthMethod') && this.options.oAuthMethod){
+    if (_.has(this.options, 'oAuthMethod') && this.options.oAuthMethod) {
       return this.options.oAuthMethod;
     }
     return OAuthMethod.redirect;
   }
 
   set oAuthMethod(method: OAuthMethod) {
-    this._settableOAuthMethod = method;
+    this.settableOAuthMethod = method;
   }
 
   get rootSlug(): string {
@@ -130,17 +136,11 @@ export class SimpleFirebaseAuthService {
     return _.assign({}, defaultLabels, passed);
   }
 
-
-  //********** PERSISTENCE ************//
-
-  private _persistenceLocal: BehaviorSubject<boolean> = new BehaviorSubject(
-    localStorage.getItem(LOCAL_PERSISTENCE_DISABLED_STORAGE_KEY) === 'yes' ? false : true
-  );
   get persistenceLocal(): Observable<boolean> {
-    return this._persistenceLocal.asObservable();
+    return this.persistenceLocal$.asObservable();
   }
-  setPersistenceLocal(b: boolean): Promise<void> {
-    return new Promise<void>(resolve => {
+  public setPersistenceLocal(b: boolean): Promise<void> {
+    return new Promise<void>((resolve) => {
       const persistence: firebase.auth.Auth.Persistence = b ?
         firebase.auth.Auth.Persistence.LOCAL : firebase.auth.Auth.Persistence.SESSION;
       this.auth.setPersistence(persistence)
@@ -150,78 +150,59 @@ export class SimpleFirebaseAuthService {
           } else {
             localStorage.setItem(LOCAL_PERSISTENCE_DISABLED_STORAGE_KEY, 'yes');
           }
-          this._persistenceLocal.next(b);
+          this.persistenceLocal$.next(b);
           resolve();
-        })
-    })
+        });
+    });
   }
 
-
-
-  //*********** EVENTS *****************//
-
-  private _authRedirectCancelled: boolean = false;
   get authRedirectCancelled(): boolean {
-    return this._authRedirectCancelled;
+    return this.pAuthRedirectCancelled;
   }
   set authRedirectCancelled(cancel: boolean) {
-    this._authRedirectCancelled = cancel;
+    this.pAuthRedirectCancelled = cancel;
   }
 
-  private _onSignedIn: Subject<AuthUserEvent> = new Subject();
-  get onSignedIn(): Observable<AuthUserEvent> {
-    return this._onSignedIn.asObservable();
+  get onSignedIn(): Observable<IAuthUserEvent> {
+    return this.onSignedIn$.asObservable();
   }
-  onSignedInNext(event: AuthUserEvent) {
+  public onSignedInNext(event: IAuthUserEvent) {
     this.authRedirectCancelled = false;
-    this._onSignedIn.next(event);
+    this.onSignedIn$.next(event);
     if (! this.authRedirectCancelled) {
       this.navigate('account');
     }
   }
-
-
-  private onSignedOut$: Subject<void> = new Subject<void>();
   get onSignedOut(): Observable<void> {
     return this.onSignedOut$.asObservable();
   }
-  onSignedOutNext() {
+  public onSignedOutNext() {
     this.authRedirectCancelled = false;
     this.onSignedOut$.next();
-    console.log(this.authRedirectCancelled)
     if (! this.authRedirectCancelled) {
       this.navigate('sign-in');
     }
   }
 
-
-  private _onProviderLinked: Subject<AuthUserEvent> = new Subject();
-  get onProviderLinked(): Observable<AuthUserEvent> {
-    return this._onProviderLinked.asObservable();
+  get onProviderLinked(): Observable<IAuthUserEvent> {
+    return this.onProviderLinked$.asObservable();
   }
-  onProviderLinkedNext(event: AuthUserEvent) {
-    this._onProviderLinked.next(event);
+  public onProviderLinkedNext(event: IAuthUserEvent) {
+    this.onProviderLinked$.next(event);
   }
-
-
-  private onProviderUnlinked$: Subject<AuthUserEvent> = new Subject();
-  get onProviderUnlinked(): Observable<AuthUserEvent> {
+  get onProviderUnlinked(): Observable<IAuthUserEvent> {
     return this.onProviderUnlinked$.asObservable();
   }
-  onProviderUnlinkedNext(event: AuthUserEvent){
-    this.onProviderUnlinked$.next(event)
+  public onProviderUnlinkedNext(event: IAuthUserEvent) {
+    this.onProviderUnlinked$.next(event);
   }
 
-  private onEmailChanged$: Subject<AuthEmailChangedEvent> = new Subject();
-  get onEmailChanged(): Observable<AuthEmailChangedEvent> {
+  get onEmailChanged(): Observable<IAuthEmailChangedEvent> {
     return this.onEmailChanged$.asObservable();
   }
-  onEmailChangedNext(event: AuthEmailChangedEvent){
-    this.onEmailChanged$.next(event)
+  public onEmailChangedNext(event: IAuthEmailChangedEvent) {
+    this.onEmailChanged$.next(event);
   }
-
-
-  private onRoute$: Subject<string> = new Subject();
   get onRoute(): Observable<string> {
     return this.onRoute$.asObservable();
   }
@@ -229,22 +210,18 @@ export class SimpleFirebaseAuthService {
     this.onRoute$.next(slug);
   }
 
-
-  //*********** ROUTER *****************//
-
-  routerLink(slug?: string) {
+  public routerLink(slug?: string): string[] {
     const commands = ['/' + this.rootSlug];
     if (slug) {
       commands.push(slug);
     }
     return commands;
   }
-  navigate(slug?: string, extras?: NavigationExtras ): Promise<boolean>{
+  public navigate(slug?: string, extras?: NavigationExtras ): Promise<boolean> {
     return this.router.navigate(this.routerLink(slug), extras);
   }
 
-  //************ API Methods **************///
-  emailSignIn(email: string, password: string, name?: string): Promise<firebase.User> {
+public emailSignIn(email: string, password: string, name?: string): Promise<firebase.User> {
     return new Promise((resolve, reject) => {
       const providerId = 'password';
       let accountExists: boolean;
@@ -254,29 +231,32 @@ export class SimpleFirebaseAuthService {
           return this.auth.fetchProvidersForEmail(email);
         })
         .then((providerIds: string[]) => {
-          return new Promise((resolve, reject) => {
-            if (providerIds.length === 0){
-              return resolve(false);
+          return new Promise((resolve2, reject2) => {
+            if (providerIds.length === 0) {
+              return resolve2(false);
             }
             if (_.includes(providerIds, providerId)) {
-              return resolve(true);
+              return resolve2(true);
             }
-            return reject({code: 'sfa/no-password-for-user', message: 'The account wth that email does not have a password'});
-          })
+            return reject2({
+              code: 'sfa/no-password-for-user',
+              message: 'The account wth that email does not have a password'
+            });
+          });
         })
         .then((result: boolean) => {
           accountExists = result;
-          if (! accountExists){
+          if (! accountExists) {
             return this.auth.createUserWithEmailAndPassword(email, password);
           }
         })
         .then(() => {
-          return this.auth.signInWithEmailAndPassword(email, password)
+          return this.auth.signInWithEmailAndPassword(email, password);
         })
         .then((result: firebase.User) => {
           user = result;
           if ((! accountExists) && this.requireDisplayName) {
-            return user.updateProfile({displayName: <string>name, photoURL: null});
+            return user.updateProfile({displayName: name as string, photoURL: null});
           }
         })
         .then(() => {
@@ -289,27 +269,17 @@ export class SimpleFirebaseAuthService {
         })
         .then(() => {
           this.authRedirectCancelled = false;
-          this._onSignedIn.next({
+          this.onSignedIn$.next({
             user: user,
             providerId: providerId
           });
           if (! this.authRedirectCancelled) {
-            this.router.navigate(['/', this.rootSlug, 'account'])
+            this.router.navigate(['/', this.rootSlug, 'account']);
           }
           resolve(user);
         })
         .catch(reject);
-    })
+    });
   }
-
-
-
-
-
-
-
-
-
-
 
 }

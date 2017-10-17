@@ -5,13 +5,14 @@ import { SimpleFirebaseAuthService } from '../../simple-firebase-auth.service';
   template: `{{label}}`,
 })
 export class ProviderLabelComponent implements OnInit {
-  @Input() providerId: string;
-  label: string;
+  @Input() public providerId: string;
+  public label: any;
   constructor(
     protected authService: SimpleFirebaseAuthService
   ) { }
 
-  ngOnInit() {
-    this.label = this.authService.providerLabels[this.providerId] || '';
+  public ngOnInit() {
+    const labels = this.authService.providerLabels as any;
+    this.label = labels[this.providerId] || '';
   }
 }

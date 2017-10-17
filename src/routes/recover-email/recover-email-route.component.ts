@@ -10,26 +10,28 @@ import { OUT_OF_BAND_MODES } from '../simple-firebase-auth-routes';
   templateUrl: './recover-email-route.component.html',
   styleUrls: ['./recover-email-route.component.scss']
 })
-export class RecoverEmailRouteComponent implements OnInit {
-  private ngUnsubscribe: Subject<void> = new Subject<void>();
-  screen: 'wait'|'success'|'form'|'error' = 'wait';
-  oobCode: string;
-  fromEmail: string = null;
-  email: string = null;
-  error: firebase.FirebaseError = null;
-  user: firebase.User = null;
-  submitting: boolean = false;
+export class RecoverEmailRouteComponent implements OnInit, OnDestroy {
+
+  public screen: 'wait'|'success'|'form'|'error' = 'wait';
+  public oobCode: string;
+  public error: firebase.FirebaseError | null = null;
+  public user: firebase.User | null = null;
+  public submitting: boolean = false;
+  public actionCodeInfo: firebase.auth.ActionCodeInfo | null = null;
+
+  protected ngUnsubscribe: Subject<void> = new Subject<void>();
+
   constructor(
-    private authService: SimpleFirebaseAuthService,
-    private route: ActivatedRoute
+    protected authService: SimpleFirebaseAuthService,
+    protected route: ActivatedRoute
   ) { }
 
-  ngOnDestroy(){
+  public ngOnDestroy() {
     this.ngUnsubscribe.next();
     this.ngUnsubscribe.complete();
   }
 
-  ngOnInit() {
+  public ngOnInit() {
     this.authService.onRouteNext('recover-email');
     const mode = this.route.snapshot.queryParams.mode || null;
     this.oobCode = this.route.snapshot.queryParams.oobCode || null;
@@ -40,11 +42,10 @@ export class RecoverEmailRouteComponent implements OnInit {
 
     this.authService.authState.takeUntil(this.ngUnsubscribe).subscribe((user: firebase.User) => {
       this.user = user;
-    })
+    });
     this.authService.auth.checkActionCode(this.oobCode)
       .then((info: firebase.auth.ActionCodeInfo) => {
-        this.fromEmail = info['data']['fromEmail'];
-        this.email = info['data']['email'];
+        this.actionCodeInfo = info;
         this.screen = 'form';
       })
       .catch((error: firebase.FirebaseError) => {
@@ -52,7 +53,7 @@ export class RecoverEmailRouteComponent implements OnInit {
         this.screen = 'error';
       });
   }
-  submit() {
+  public submit() {
     this.submitting = true;
     this.authService.auth.applyActionCode(this.oobCode)
       .then(() => {

@@ -3,7 +3,6 @@ import { CommonModule } from '@angular/common';
 import { RouterModule, Routes } from '@angular/router';
 import { ReactiveFormsModule } from '@angular/forms';
 
-
 import { OauthService } from './oauth.service';
 
 // routes...
@@ -18,11 +17,16 @@ import { ChangePasswordRouteComponent } from './change-password/change-password-
 import { ChangeEmailRouteComponent } from './change-email/change-email-route.component';
 import { ResetPasswordRouteComponent } from './reset-password/reset-password-route.component';
 import { VerifyEmailRouteComponent } from './verify-email/verify-email-route.component';
-import { RecoverEmailRouteComponent } from './recover-email/recover-email-route.component';
-import { SendResetPasswordLinkRouteComponent } from './send-reset-password-link/send-reset-password-link-route.component';
-import { SendEmailVerificationLinkRouteComponent } from './send-email-verification-link/send-email-verification-link-route.component';
+import {
+  RecoverEmailRouteComponent
+} from './recover-email/recover-email-route.component';
+import {
+  SendResetPasswordLinkRouteComponent
+} from './send-reset-password-link/send-reset-password-link-route.component';
+import {
+  SendEmailVerificationLinkRouteComponent
+} from './send-email-verification-link/send-email-verification-link-route.component';
 import { ReauthenticateRouteComponent } from './reauthenticate/reauthenticate-route.component';
-
 
 // forms...
 import { PersistenceFormComponent } from './persistence-form/persistence-form.component';
@@ -30,7 +34,6 @@ import { EmailSignInFormComponent } from './sign-in/email-sign-in-form.component
 import { OauthSignInComponent } from './sign-in/oauth-sign-in.component';
 import { ReauthFormComponent } from './reauth-form/reauth-form.component';
 import { SignInMethodsComponent } from './account/sign-in-methods.component';
-
 
 // utilities...
 import { ToggleablePasswordComponent } from './util/toggleable-password.component';
@@ -46,9 +49,6 @@ import { IconSuccessComponent } from './util/icon-success.component';
 import { IconWarningComponent } from './util/icon-warning.component';
 import { FooterComponent } from './container/footer.component';
 import { ContainerComponent } from './container/container.component';
-
-
-
 
 const routes: Routes = [
   {path: '', component: ContainerComponent, children: [
@@ -89,8 +89,6 @@ const routes: Routes = [
     SendResetPasswordLinkRouteComponent,
     ResetPasswordRouteComponent,
 
-
-
     ToggleablePasswordComponent,
     InvalidFeedbackDirective,
     InvalidInputDirective,
@@ -114,8 +112,6 @@ const routes: Routes = [
     ReauthenticateRouteComponent,
     FooterComponent,
     ContainerComponent,
-
-
   ],
 
   providers: [
