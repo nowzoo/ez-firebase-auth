@@ -1,0 +1,21 @@
+<div class="form-group">
+  <div class="text-center">
+    <button *ngFor="let id of oAuthProviderIds"
+      [sfaProviderTitle]="{label: 'Sign in with', id: id}"
+      (click)="oAuthSignIn(id)" class="btn btn-outline-primary btn-lg mx-1 my-1">
+      <sfa-provider-icon [providerId]="id"></sfa-provider-icon>
+      <span class="sr-only">Sign In with {{id}}</span>
+    </button>
+  </div>
+  <div class="invalid-feedback" *ngIf="diffCredError" style="display:block;">
+    The email address {{diffCredError.email}} is not yet
+    linked to a <sfa-provider-label [providerId]="diffCredError.providerId"></sfa-provider-label>
+    account. Please sign in using
+    <sfa-providers-list-phrase [providerIds]="diffCredError.providerIdsForEmail" andOr="or"></sfa-providers-list-phrase>
+    instead.
+  </div>
+  <div class="invalid-feedback" *ngIf="unhandledCredError" style="display:block;">
+    Sign in with <sfa-provider-label [providerId]="unhandledCredError.providerId"></sfa-provider-label>
+    failed. Error code: {{unhandledCredError.code}}.
+  </div>
+</div>

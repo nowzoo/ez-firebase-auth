@@ -27,7 +27,6 @@ describe('ChangePasswordRouteComponent', () => {
     onRoute: () => {},
     onEmailChanged: () => {},
     navigate: () => {},
-    getProviderById: () => Promise.resolve(provider),
     configuredProviderIds: ['password']
   };
 

@@ -1,0 +1,45 @@
+<div *ngIf=" 'wait' === screen " class="alert alert-info my-3" role="alert">
+  <i class="fa fa-fw fa-spin fa-refresh" aria-hidden="true"></i>
+  Please wait...
+</div>
+
+<div *ngIf=" 'form' === screen ">
+  <div class="card my-3">
+    <div class="card-body">
+        <p>
+          Are you sure you want to
+          <span *ngIf="providerId === 'password'">remove the password</span>
+          <span *ngIf="providerId !== 'password'">
+            unlink
+            <sfa-provider-label [providerId]="providerId"></sfa-provider-label>
+          </span>
+          from your account?
+        </p>
+
+        <div class="form-group text-right">
+          <p>
+            <a class="btn btn-secondary" routerLink="../account">Cancel</a>
+            <button class="btn btn-danger" type="button" (click)="submit()">
+              <i class="fa fa-times fa-fw" aria-hidden="true"></i>
+              <span *ngIf="providerId !== 'password'">
+                Unlink
+                <sfa-provider-label [providerId]="providerId"></sfa-provider-label>
+              </span>
+              <span *ngIf="providerId === 'password'">
+                Remove Password
+              </span>
+            </button>
+          </p>
+          <p *ngIf="submitting">
+            <i class="fa fa-fw fa-spin fa-refresh" aria-hidden="true"></i>
+            Removing <sfa-provider-label [providerId]="providerId"></sfa-provider-label>
+            sign in method....
+          </p>
+          <p *ngIf="unhandledError">
+            <i class="fa fa-fw fa-warning text-danger" aria-hidden="true"></i>
+            Error: {{unhandledError.code}}
+          </p>
+        </div>
+    </div>
+  </div>
+</div>
