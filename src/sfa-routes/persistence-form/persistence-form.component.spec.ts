@@ -1,49 +1,54 @@
-import { async, ComponentFixture, TestBed, fakeAsync, tick} from '@angular/core/testing';
+import { ComponentFixture, TestBed, fakeAsync, tick} from '@angular/core/testing';
 import { ReactiveFormsModule } from '@angular/forms'
 import { SfaService } from '../../sfa/sfa.service';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 
 import { PersistenceFormComponent } from './persistence-form.component';
+import {
+  MOCK_UTILITIES_DECLARATIONS,
+  MOCK_IMPORTS,
+  MOCK_PROVIDERS,
+  MOCK_ROUTE_GET,
+  MOCK_USER,
+  MOCK_AUTH_SERVICE_GET,
+  MOCK_OAUTH_SERVICE_GET
+ } from '../test';
 
-describe('PersistenceFormComponent', () => {
+describe('PersistenceFormComponent angular sanity check', () => {
   let component: PersistenceFormComponent;
   let fixture: ComponentFixture<PersistenceFormComponent>;
 
 
-  const persistenceLocal$: BehaviorSubject<boolean> = new BehaviorSubject(true);
-  const authService = {
-    persistenceLocal: persistenceLocal$.asObservable(),
-    setPersistenceLocal: () => {}
-  };
-
-  beforeEach(async(() => {
+  beforeEach(() => {
     TestBed.configureTestingModule({
-      declarations: [ PersistenceFormComponent ],
-      imports: [ReactiveFormsModule],
+      declarations: [ PersistenceFormComponent, ...MOCK_UTILITIES_DECLARATIONS ],
+      imports: [...MOCK_IMPORTS],
       providers: [
-        {provide: SfaService, useValue: authService}
+        ...MOCK_PROVIDERS
       ]
     })
     .compileComponents();
-  }));
-
-  beforeEach(() => {
     fixture = TestBed.createComponent(PersistenceFormComponent);
     component = fixture.componentInstance;
+    fixture.detectChanges();
   });
 
   it('should be created', () => {
     expect(component).toBeTruthy();
   });
+});
 
-  describe('ngOnDestroy()', () => {
-    it('should deal with unsubscribing', fakeAsync(() => {
-      let unsub = false;
-      component.ngUnsubscribe.subscribe(_ => unsub = true);
-      component.ngOnDestroy();
-      expect(unsub).toBe(true)
-    }))
-  })
+describe('PersistenceFormComponent', () => {
+  let component;
+  let persistenceLocal$: BehaviorSubject<any>;
+  beforeEach(() => {
+    persistenceLocal$ = new BehaviorSubject(true);
+    const sfaService: any = Object.assign({}, MOCK_AUTH_SERVICE_GET(), {
+      persistenceLocal: persistenceLocal$.asObservable()
+    });
+    component = new PersistenceFormComponent(sfaService);
+  });
+
 
   describe('ngOnInit()', () => {
     it('should set the id', fakeAsync(() => {

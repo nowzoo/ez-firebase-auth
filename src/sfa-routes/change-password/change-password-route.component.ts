@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, FormControl } from '@angular/forms';
 import { Subject } from 'rxjs/Subject';
 import 'rxjs/add/operator/takeUntil';
@@ -7,13 +7,14 @@ import * as _ from '../../utils/lodash-funcs';
 import { SfaService } from '../../sfa/sfa.service';
 import * as Utils from '../../utils/utils';
 import { SfaMessages } from '../messages.enum';
+import { SfaBaseComponent } from '../sfa-base.component';
 
 @Component({
   selector: 'sfa-change-password-route',
   templateUrl: './change-password-route.component.html',
   styleUrls: ['./change-password-route.component.scss']
 })
-export class ChangePasswordRouteComponent implements OnInit, OnDestroy {
+export class ChangePasswordRouteComponent extends SfaBaseComponent implements OnInit {
 
   public user: firebase.User | null = null;
   public hasPasswordProvider = false;
@@ -27,13 +28,12 @@ export class ChangePasswordRouteComponent implements OnInit, OnDestroy {
 
   constructor(
     protected fb: FormBuilder,
-    protected authService: SfaService
-  ) { }
-
-  public ngOnDestroy() {
-    this.ngUnsubscribe.next();
-    this.ngUnsubscribe.complete();
+    authService: SfaService
+  ) {
+    super(authService);
   }
+
+
 
   public ngOnInit() {
     this.id = _.uniqueId('sfa-change-password-route')
@@ -45,25 +45,10 @@ export class ChangePasswordRouteComponent implements OnInit, OnDestroy {
     fc.valueChanges.takeUntil(this.ngUnsubscribe).subscribe(() => {
       Utils.clearControlErrors(fc, ['auth/weak-password']);
     });
-
-    this.authService.authState.takeUntil(this.ngUnsubscribe).subscribe((user: firebase.User) => {
-      if (! user) {
-        this.authService.navigate('sign-in');
-        return;
-      }
-      let hasPasswordProvider = _.find(user.providerData, {providerId: 'password'}) ? true : false;
-      if (! hasPasswordProvider) {
-        this.authService.navigate('account');
-        return;
-      }
-      hasPasswordProvider = _.includes(this.authService.configuredProviderIds,  'password');
-      if (! hasPasswordProvider) {
-        this.authService.navigate('account');
-        return;
-      }
-      this.user = user;
-      this.hasPasswordProvider = true;
-    });
+    this.onInitLoadUser()
+      .then(() => {
+        this.gateToUserWithPassword();
+      });
   }
 
   public submit() {

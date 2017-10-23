@@ -1,67 +1,64 @@
-import { async, ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
-import { ReactiveFormsModule } from '@angular/forms'
+import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
+import { FormBuilder, FormControl} from '@angular/forms'
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 import { MockComponent } from 'ng2-mock-component';
 import * as _ from '../../utils/lodash-funcs';
 
 import { ChangeEmailRouteComponent } from './change-email-route.component';
 import { SfaMessages } from '../messages.enum';
-
+import {
+  MOCK_UTILITIES_DECLARATIONS,
+  MOCK_IMPORTS,
+  MOCK_PROVIDERS,
+  MOCK_ROUTE_GET,
+  MOCK_USER,
+  MOCK_AUTH_SERVICE_GET,
+  MOCK_OAUTH_SERVICE_GET
+ } from '../test';
 
 import { SfaService } from '../../sfa/sfa.service';
 
-describe('ChangeEmailRouteComponent', () => {
+describe('ChangeEmailRouteComponent angular sanity check', () => {
   let component: ChangeEmailRouteComponent;
   let fixture: ComponentFixture<ChangeEmailRouteComponent>;
-
-
-  const user = {
-    email: 'foo@bar.com',
-    providerData: [{providerId: 'password'}],
-    updateEmail: () => Promise.resolve(),
-    reload: () => Promise.resolve(),
-    sendEmailVerification: () => Promise.resolve(),
-  }
-  const authState$: BehaviorSubject<any> = new BehaviorSubject(user);
-  const authService = {
-    authState: authState$.asObservable(),
-    onRoute: () => {},
-    onEmailChanged: () => {},
-    navigate: () => {},
-    configuredProviderIds: ['password']
-  };
-
 
 
   beforeEach(() => {
     TestBed.configureTestingModule({
       declarations: [
         ChangeEmailRouteComponent,
-        MockComponent({ selector: '[sfaInvalidInput]', inputs: ['sfaInvalidInput'] }),
-        MockComponent({ selector: '[sfaInvalidFeedback]', inputs: ['sfaInvalidFeedback', 'key'] })
+        ...MOCK_UTILITIES_DECLARATIONS
       ],
-      imports: [ ReactiveFormsModule ],
+      imports: [ ...MOCK_IMPORTS ],
       providers: [
-        {provide: SfaService, useValue: authService}
+        ...MOCK_PROVIDERS
       ]
     })
     .compileComponents();
     fixture = TestBed.createComponent(ChangeEmailRouteComponent);
     component = fixture.componentInstance;
+    fixture.detectChanges();
   });
 
   it('should be created', () => {
     expect(component).toBeTruthy();
   });
+});
 
-  describe('ngOnDestroy()', () => {
-    it('should deal with unsubscribing', fakeAsync(() => {
-      let unsub = false;
-      component.ngUnsubscribe.subscribe(_ => unsub = true);
-      component.ngOnDestroy();
-      expect(unsub).toBe(true)
-    }))
-  })
+describe('ChangeEmailRouteComponent', () => {
+
+  let component;
+  let authState$: BehaviorSubject<any>;
+  beforeEach(() => {
+    authState$ = new BehaviorSubject(null);
+    const sfaService: any = Object.assign({}, MOCK_AUTH_SERVICE_GET(), {
+      authState: authState$.asObservable(),
+      configuredProviderIds: ['password']
+    });
+    const fb = new FormBuilder();
+    component = new ChangeEmailRouteComponent(fb, sfaService);
+  });
+
 
   describe('ngOnInit()', () => {
     it('should call onRoute', fakeAsync(() => {
@@ -77,44 +74,16 @@ describe('ChangeEmailRouteComponent', () => {
       component.ngOnInit();
       expect(component.fg.get('email')).toBeTruthy()
     }))
-    it('should redirect to sign in if the user is null', fakeAsync(() => {
-      spyOn(component.authService, 'navigate').and.callThrough();
+    it('should gate to users with password', fakeAsync(() => {
+      spyOn(component, 'onInitLoadUser').and.callThrough();
+      spyOn(component, 'gateToUserWithPassword').and.callThrough();
       component.ngOnInit();
-      authState$.next(null);
+      expect(component.onInitLoadUser).toHaveBeenCalled();
       tick();
-      expect(component.authService.navigate).toHaveBeenCalledWith('sign-in');
+      expect(component.gateToUserWithPassword).toHaveBeenCalledWith();
     }))
-    it('should redirect to account if the user does not have a password', fakeAsync(() => {
-      spyOn(component.authService, 'navigate').and.callThrough();
-      const anotherUser = _.assign({}, user);
-      anotherUser.providerData = [{providerId: 'twitter.com'}];
-      component.ngOnInit();
-      authState$.next(anotherUser);
-      tick();
-      expect(component.authService.navigate).toHaveBeenCalledWith('account');
-    }))
-    it('should not redirect if the user has password', fakeAsync(() => {
-      spyOn(component.authService, 'navigate').and.callThrough();
-      authState$.next(user);
-      expect(authState$.value.providerData[0].providerId).toBe('password');
-      component.ngOnInit();
-      tick();
-      expect(component.authService.navigate).not.toHaveBeenCalled();
-    }))
-    it('should redirect to account if the password provider is not enabled', fakeAsync(() => {
-      spyOn(component.authService, 'navigate').and.callThrough();
-      authState$.next(user);
-      component.authService.configuredProviderIds = ['twitter.com'];
-      component.ngOnInit();
-      tick();
-      expect(component.authService.navigate).toHaveBeenCalledWith('account');
-    }))
-    it('should redirect to account if the password provider is not enabled', fakeAsync(() => {
-      expect(component.authService.configuredProviderIds).toEqual(['password'])
-    }))
-
     it('should clear the invalid email err', fakeAsync(() => {
-      authState$.next(user);
+      authState$.next(MOCK_USER);
       component.ngOnInit();
       const fc = component.fg.get('email');
       fc.setValue('foo');
@@ -125,7 +94,7 @@ describe('ChangeEmailRouteComponent', () => {
       expect(fc.hasError('auth/invalid-email')).toBe(false);
     }))
     it('should clear the email-already-in-use err', fakeAsync(() => {
-      authState$.next(user);
+      authState$.next(MOCK_USER);
       component.ngOnInit();
       const fc = component.fg.get('email');
       fc.setValue('foo');
@@ -135,17 +104,24 @@ describe('ChangeEmailRouteComponent', () => {
       tick();
       expect(fc.hasError('auth/email-already-in-use')).toBe(false);
     }))
-    it('should set an error if the fc value = the user\'s current email', fakeAsync(() => {
-      authState$.next(user);
-      component.ngOnInit();
-      const fc = component.fg.get('email');
-      fc.setValue(user.email);
-      tick();
-      expect(fc.hasError('same')).toBe(true);
-      fc.setValue('a@b.com');
-      tick();
-      expect(fc.hasError('same')).toBe(false);
-    }))
+  })
+
+  describe('validateNotSame(fc)',  () => {
+    it('should return null if there is no user', () => {
+      const fc = new FormControl('a@b.com');
+      component.user = null;
+      expect(component.validateNotSame(fc)).toBe(null);
+    })
+    it('should return null if the email is not the same', () => {
+      const fc = new FormControl('a@b.com');
+      component.user = {email: 'c@g.com'};
+      expect(component.validateNotSame(fc)).toBe(null);
+    })
+    it('should return {same: true} if the email is the same', () => {
+      const fc = new FormControl('a@b.com');
+      component.user = {email: 'a@b.com'};
+      expect(component.validateNotSame(fc)).toEqual({same: true});
+    })
   })
 
   describe('submit()', () => {
@@ -156,6 +132,8 @@ describe('ChangeEmailRouteComponent', () => {
       expect(component.submitting).toBe(false);
     })
     it('should work', fakeAsync(() => {
+      const user = Object.assign({}, MOCK_USER)
+      authState$.next(user);
       component.ngOnInit();
       component.fg.get('email').setValue('a@b.co');
       component.authService.sendEmailVerificationLink = true;
@@ -176,6 +154,8 @@ describe('ChangeEmailRouteComponent', () => {
       expect(component.unhandledError).toBe(null);
     }));
     it('should work if sendEmailVerificationLink is false', fakeAsync(() => {
+      const user = Object.assign({}, MOCK_USER)
+      authState$.next(user);
       component.ngOnInit();
       component.fg.get('email').setValue('a@b.co');
       component.authService.sendEmailVerificationLink = false;
@@ -197,6 +177,8 @@ describe('ChangeEmailRouteComponent', () => {
     }));
 
     it('should handle the invalid-email err', fakeAsync(() => {
+      const user = Object.assign({}, MOCK_USER)
+      authState$.next(user);
       component.ngOnInit();
       component.fg.get('email').setValue('a@b.co');
       component.authService.sendEmailVerificationLink = true;
@@ -219,6 +201,8 @@ describe('ChangeEmailRouteComponent', () => {
     }))
 
     it('should handle the email-already-in-use err', fakeAsync(() => {
+      const user = Object.assign({}, MOCK_USER)
+      authState$.next(user);
       component.ngOnInit();
       component.fg.get('email').setValue('a@b.co');
       component.authService.sendEmailVerificationLink = true;
@@ -241,6 +225,8 @@ describe('ChangeEmailRouteComponent', () => {
     }))
 
     it('should handle the requires-recent-login err', fakeAsync(() => {
+      const user = Object.assign({}, MOCK_USER)
+      authState$.next(user);
       component.ngOnInit();
       component.fg.get('email').setValue('a@b.co');
       component.authService.sendEmailVerificationLink = true;
@@ -261,6 +247,8 @@ describe('ChangeEmailRouteComponent', () => {
       expect(component.unhandledError).toBe(null);
     }))
     it('should handle other errors', fakeAsync(() => {
+      const user = Object.assign({}, MOCK_USER)
+      authState$.next(user);
       component.ngOnInit();
       component.fg.get('email').setValue('a@b.co');
       component.authService.sendEmailVerificationLink = true;

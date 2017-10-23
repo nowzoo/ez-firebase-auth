@@ -7,15 +7,16 @@ import * as _ from '../../utils/lodash-funcs';
 import { SfaService } from '../../sfa/sfa.service';
 import * as Utils from '../../utils/utils';
 import { SfaMessages } from '../messages.enum';
+import { SfaBaseComponent } from '../sfa-base.component';
+
 @Component({
   selector: 'sfa-change-email-route',
   templateUrl: './change-email-route.component.html',
   styleUrls: ['./change-email-route.component.scss']
 })
-export class ChangeEmailRouteComponent implements OnInit, OnDestroy {
+export class ChangeEmailRouteComponent extends SfaBaseComponent implements OnInit {
 
   public user: firebase.User | null = null;
-  public hasPasswordProvider = false;
   public fg: FormGroup;
   public id: string;
   public success = false;
@@ -26,50 +27,26 @@ export class ChangeEmailRouteComponent implements OnInit, OnDestroy {
 
   constructor(
     protected fb: FormBuilder,
-    protected authService: SfaService
-  ) { }
-
-  public ngOnDestroy() {
-    this.ngUnsubscribe.next();
-    this.ngUnsubscribe.complete();
+    authService: SfaService
+  ) {
+    super(authService);
   }
+
 
   public ngOnInit() {
     this.authService.onRoute('change-email');
     this.id = _.uniqueId('sfa-change-email-route');
     this.fg = this.fb.group({
-      email: ['', [Validators.required, Utils.validateEmail, (fc: FormControl) => {
-        if (! this.user) {
-          return null;
-        }
-        const value = _.trim(fc.value).toLowerCase();
-        const curr = _.trim(this.user.email as string).toLowerCase();
-        return value === curr ? {same: true} : null;
-      }]]
+      email: ['', [Validators.required, Utils.validateEmail, this.validateNotSame.bind(this)]]
     });
     const fc: FormControl = this.fg.get('email') as FormControl;
     fc.valueChanges.takeUntil(this.ngUnsubscribe).subscribe(() => {
       Utils.clearControlErrors(fc, ['auth/invalid-email', 'auth/email-already-in-use']);
     });
-
-    this.authService.authState.takeUntil(this.ngUnsubscribe).subscribe((user: firebase.User) => {
-      if (! user) {
-        this.authService.navigate('sign-in');
-        return;
-      }
-      let hasPasswordProvider = _.find(user.providerData, {providerId: 'password'}) ? true : false;
-      if (! hasPasswordProvider) {
-        this.authService.navigate('account');
-        return;
-      }
-      hasPasswordProvider = _.includes(this.authService.configuredProviderIds,  'password');
-      if (! hasPasswordProvider) {
-        this.authService.navigate('account');
-        return;
-      }
-      this.user = user;
-      this.hasPasswordProvider = true;
-    });
+    this.onInitLoadUser()
+      .then(() => {
+        this.gateToUserWithPassword();
+      });
   }
 
   public submit() {
@@ -112,5 +89,14 @@ export class ChangeEmailRouteComponent implements OnInit, OnDestroy {
             break;
         }
       });
+  }
+
+  validateNotSame(fc: FormControl) {
+    if (! this.user) {
+      return null;
+    }
+    const value = _.trim(fc.value).toLowerCase();
+    const curr = _.trim(this.user.email as string).toLowerCase();
+    return value === curr ? {same: true} : null;
   }
 }

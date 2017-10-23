@@ -1,107 +1,104 @@
-import { async, ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
+import {  ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
-import { ActivatedRoute } from '@angular/router';
 import { IndexRouteComponent } from './index-route.component';
 
 import { OUT_OF_BAND_MODES } from '../sfa-routes';
-import { SfaService } from '../../sfa/sfa.service';
 
-describe('IndexRouteComponent', () => {
+import {
+  MOCK_UTILITIES_DECLARATIONS,
+  MOCK_IMPORTS,
+  MOCK_PROVIDERS,
+  MOCK_ROUTE_GET,
+  MOCK_USER,
+  MOCK_AUTH_SERVICE_GET,
+  MOCK_OAUTH_SERVICE_GET
+ } from '../test';
+describe('IndexRouteComponent angular sanity check', () => {
 
-  const getActivatedRoute = (qp?: any) => {
-    return  {
-      snapshot: {
-        queryParams: qp || {}
-      }
-    };
-  };
-  const authState$: BehaviorSubject<any> = new BehaviorSubject(null);
-  const sfaService = {
-    authState: authState$.asObservable(),
-    navigate: (p) => {}
-  }
 
-  beforeEach(async(() => {
-    spyOn(sfaService, 'navigate').and.callThrough();
+  let component: IndexRouteComponent;
+  let fixture: ComponentFixture<IndexRouteComponent>;
+
+  beforeEach(() => {
     TestBed.configureTestingModule({
-      declarations: [ IndexRouteComponent ],
+      declarations: [
+        IndexRouteComponent,
+        ...MOCK_UTILITIES_DECLARATIONS
+      ],
+      imports: [ ...MOCK_IMPORTS ],
       providers: [
-        {provide: ActivatedRoute, useValue: getActivatedRoute()},
-        {provide: SfaService, useValue: sfaService},
+        ...MOCK_PROVIDERS
       ]
     })
     .compileComponents();
-  }));
+    fixture = TestBed.createComponent(IndexRouteComponent);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
+  });
 
-
-  it('should be created', async(() => {
-    const fixture: ComponentFixture<IndexRouteComponent> = TestBed.createComponent(IndexRouteComponent);
-    const component: IndexRouteComponent = fixture.componentInstance;
+  it('should be created', () => {
     expect(component).toBeTruthy();
-  }));
-  it('should redirect to sign-in if the user is not signed in and there is no action code', async(() => {
-    const route = getActivatedRoute();
-    TestBed.overrideProvider(ActivatedRoute, {useValue: route});
-    authState$.next(null);
-    const fixture: ComponentFixture<IndexRouteComponent> = TestBed.createComponent(IndexRouteComponent);
-    const component: IndexRouteComponent = fixture.componentInstance;
-    fixture.detectChanges();
-    expect(sfaService.navigate).toHaveBeenCalledWith('sign-in')
-  }));
-  it('should redirect to account if the user is signed in and there is no action code', async(() => {
-    const route = getActivatedRoute();
-    TestBed.overrideProvider(ActivatedRoute, {useValue: route});
-    authState$.next({uid: 'foo'});
-    const fixture: ComponentFixture<IndexRouteComponent> = TestBed.createComponent(IndexRouteComponent);
-    const component: IndexRouteComponent = fixture.componentInstance;
-    fixture.detectChanges();
-    expect(sfaService.navigate).toHaveBeenCalledWith('account')
-  }));
-  it('should redirect to sign-in if the user is not signed in and oobCode is not set in the query', async(() => {
-    const route = getActivatedRoute({mode: OUT_OF_BAND_MODES.resetPassword});
-    TestBed.overrideProvider(ActivatedRoute, {useValue: route});
-    authState$.next(null);
-    const fixture: ComponentFixture<IndexRouteComponent> = TestBed.createComponent(IndexRouteComponent);
-    const component: IndexRouteComponent = fixture.componentInstance;
-    fixture.detectChanges();
-    expect(sfaService.navigate).toHaveBeenCalledWith('sign-in')
-  }));
-  it('should redirect to sign-in if the user is not signed in and mode is not set in the query', async(() => {
-    const route = getActivatedRoute({oobCode: 'abs'});
-    TestBed.overrideProvider(ActivatedRoute, {useValue: route});
-    authState$.next(null);
-    const fixture: ComponentFixture<IndexRouteComponent> = TestBed.createComponent(IndexRouteComponent);
-    const component: IndexRouteComponent = fixture.componentInstance;
-    fixture.detectChanges();
-    expect(sfaService.navigate).toHaveBeenCalledWith('sign-in')
-  }));
-  it('should redirect to reset password if the query has oobCode and mode is resetPassword', async(() => {
-    const route = getActivatedRoute({oobCode: 'abs', mode: OUT_OF_BAND_MODES.resetPassword});
-    TestBed.overrideProvider(ActivatedRoute, {useValue: route});
-    authState$.next(null);
-    const fixture: ComponentFixture<IndexRouteComponent> = TestBed.createComponent(IndexRouteComponent);
-    const component: IndexRouteComponent = fixture.componentInstance;
-    fixture.detectChanges();
-    expect(sfaService.navigate).toHaveBeenCalledWith('reset-password', {queryParamsHandling: 'preserve'})
-  }));
-  it('should redirect to recover email if the query has oobCode and mode is recoverEmail', async(() => {
-    const route = getActivatedRoute({oobCode: 'abs', mode: OUT_OF_BAND_MODES.recoverEmail});
-    TestBed.overrideProvider(ActivatedRoute, {useValue: route});
-    authState$.next(null);
-    const fixture: ComponentFixture<IndexRouteComponent> = TestBed.createComponent(IndexRouteComponent);
-    const component: IndexRouteComponent = fixture.componentInstance;
-    fixture.detectChanges();
-    expect(sfaService.navigate).toHaveBeenCalledWith('recover-email', {queryParamsHandling: 'preserve'})
-  }));
-  it('should redirect to verify email if the query has oobCode and mode is verifyEmail', async(() => {
-    const route = getActivatedRoute({oobCode: 'abs', mode: OUT_OF_BAND_MODES.verifyEmail});
-    TestBed.overrideProvider(ActivatedRoute, {useValue: route});
-    authState$.next(null);
-    const fixture: ComponentFixture<IndexRouteComponent> = TestBed.createComponent(IndexRouteComponent);
-    const component: IndexRouteComponent = fixture.componentInstance;
-    fixture.detectChanges();
-    expect(sfaService.navigate).toHaveBeenCalledWith('verify-email', {queryParamsHandling: 'preserve'})
-  }));
+  });
+});
 
-
+describe('IndexRouteComponent', () => {
+  let component;
+  let authState$: BehaviorSubject<any>;
+  beforeEach(() => {
+    authState$ = new BehaviorSubject(null);
+    const sfaService: any = Object.assign({}, MOCK_AUTH_SERVICE_GET(), {
+      authState: authState$.asObservable()
+    });
+    const route: any = Object.assign({}, MOCK_ROUTE_GET());
+    route.snapshot.queryParams.providerId = 'twitter.com';
+    component = new IndexRouteComponent(route, sfaService);
+  });
+  describe('ngOnInit', () => {
+    it('should redirect to sign-in if the user is not signed in and there is no action code', () => {
+      spyOn(component.authService, 'navigate').and.callThrough();
+      component.route.snapshot.queryParams = {}
+      authState$.next(null);
+      component.ngOnInit();
+      expect(component.authService.navigate).toHaveBeenCalledWith('sign-in')
+    });
+    it('should redirect to account if the user is signed in and there is no action code', () => {
+      spyOn(component.authService, 'navigate').and.callThrough();
+      component.route.snapshot.queryParams = {}
+      authState$.next(MOCK_USER);
+      component.ngOnInit();
+      expect(component.authService.navigate).toHaveBeenCalledWith('account')
+    });
+    it('should redirect to sign-in if the user is not signed in and oobCode is not set in the query', () => {
+      spyOn(component.authService, 'navigate').and.callThrough();
+      component.route.snapshot.queryParams = {mode: OUT_OF_BAND_MODES.resetPassword}
+      authState$.next(null);
+      component.ngOnInit();
+      expect(component.authService.navigate).toHaveBeenCalledWith('sign-in')
+    });
+    it('should redirect to sign-in if the user is signed in and oobCode is not set in the query', () => {
+      spyOn(component.authService, 'navigate').and.callThrough();
+      component.route.snapshot.queryParams = {mode: OUT_OF_BAND_MODES.resetPassword}
+      authState$.next(MOCK_USER);
+      component.ngOnInit();
+      expect(component.authService.navigate).toHaveBeenCalledWith('account')
+    });
+    it('should redirect to reset-password if that is the mode and oobCode is set', () => {
+      spyOn(component.authService, 'navigate').and.callThrough();
+      component.route.snapshot.queryParams = {mode: OUT_OF_BAND_MODES.resetPassword, oobCode: 'jkshkjhskjh'}
+      component.ngOnInit();
+      expect(component.authService.navigate).toHaveBeenCalledWith('reset-password', { queryParamsHandling: 'preserve' })
+    });
+    it('should redirect to recover-email if that is the mode and oobCode is set', () => {
+      spyOn(component.authService, 'navigate').and.callThrough();
+      component.route.snapshot.queryParams = {mode: OUT_OF_BAND_MODES.recoverEmail, oobCode: 'jkshkjhskjh'}
+      component.ngOnInit();
+      expect(component.authService.navigate).toHaveBeenCalledWith('recover-email', { queryParamsHandling: 'preserve' })
+    });
+    it('should redirect to verify-email if that is the mode and oobCode is set', () => {
+      spyOn(component.authService, 'navigate').and.callThrough();
+      component.route.snapshot.queryParams = {mode: OUT_OF_BAND_MODES.verifyEmail, oobCode: 'jkshkjhskjh'}
+      component.ngOnInit();
+      expect(component.authService.navigate).toHaveBeenCalledWith('verify-email', { queryParamsHandling: 'preserve' })
+    });
+  })
 });

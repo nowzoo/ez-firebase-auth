@@ -4,35 +4,63 @@ import { ActivatedRoute } from '@angular/router';
 import 'rxjs/add/operator/takeUntil';
 import * as firebase from 'firebase';
 import { SfaService } from '../../sfa/sfa.service';
+import { SfaBaseComponent } from '../sfa-base.component';
+import { OauthService } from '../oauth.service';
+import { SfaMessages } from '../messages.enum';
+import { OAuthMethod } from '../../sfa/sfa';
+import { UserProviderData } from '../user-provider-data.class';
+
 @Component({
   selector: 'sfa-account',
   templateUrl: './account-route.component.html',
   styleUrls: ['./account-route.component.scss']
 })
-export class AccountRouteComponent implements OnInit, OnDestroy {
+export class AccountRouteComponent extends SfaBaseComponent implements OnInit, OnDestroy {
 
-  public message: string|null = null;
-  public user: firebase.User | null = null;
-  protected ngUnsubscribe: Subject<void> = new Subject<void>();
-
+  message: number | null = null;
+  user: firebase.User | null;
+  userProviderData: UserProviderData;
   constructor(
     protected route: ActivatedRoute,
-    protected authService: SfaService,
-  ) { }
-
-  public ngOnDestroy() {
-    this.ngUnsubscribe.next();
-    this.ngUnsubscribe.complete();
+    protected oAuthService: OauthService,
+    authService: SfaService,
+  ) {
+    super(authService);
   }
 
-  public ngOnInit() {
+  ngOnInit() {
     this.authService.onRoute('account');
-    this.message = this.route.snapshot.queryParams.message || null;
-    this.authService.authState.takeUntil(this.ngUnsubscribe).subscribe((user: firebase.User | null) => {
-      this.user = user;
-      if (! user) {
-        this.authService.navigate('sign-in');
-      }
-    });
+
+    this.initMessage();
+    this.onInitLoadUser()
+      .then(() => {
+        this.gateToSignedInUser();
+      })
+  }
+
+  protected initMessage() {
+    console.log(this.route)
+    if (! this.route.snapshot.queryParams.message) {
+      this.message = null;
+      return;
+    }
+    const message = parseInt(this.route.snapshot.queryParams.message, 10);
+    this.message = isNaN(message) ? null : message;
+  }
+
+  addProvider(providerId: string) {
+    if ('password' === providerId) {
+      this.authService.navigate('add-password');
+      return;
+    }
+    switch (this.authService.oAuthMethod) {
+      case OAuthMethod.popup:
+        this.authService.navigate('link', {queryParams: {providerId: providerId}});
+        this.oAuthService.savedPopupPromise = this.oAuthService.linkWithPopup(providerId, this.user);
+        break;
+      default:
+        this.authService.navigate('link', {queryParams: {providerId: providerId}});
+        break;
+    }
   }
 }

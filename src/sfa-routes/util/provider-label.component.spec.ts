@@ -1,4 +1,4 @@
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { ProviderLabelComponent } from './provider-label.component';
 import { SfaService } from '../../sfa/sfa.service';
@@ -8,7 +8,7 @@ describe('ProviderLabelComponent', () => {
   let fixture: ComponentFixture<ProviderLabelComponent>;
 
   const sfaService = {providerLabels: {}}
-  beforeEach(async(() => {
+  beforeEach(() => {
     TestBed.configureTestingModule({
       declarations: [ ProviderLabelComponent ],
       providers: [
@@ -16,9 +16,6 @@ describe('ProviderLabelComponent', () => {
       ]
     })
     .compileComponents();
-  }));
-
-  beforeEach(() => {
     fixture = TestBed.createComponent(ProviderLabelComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();

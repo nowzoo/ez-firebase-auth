@@ -17,9 +17,92 @@
   </p>
 
   <h6 class="text-muted mb-1">Sign In Methods</h6>
-  <div class="mb-3">
-    <sfa-sign-in-methods></sfa-sign-in-methods>
+  <div class="mb-3" *ngIf="userProviderData">
+    <ul class="list-group">
+      <li *ngIf="userProviderData.hasPassword" class="list-group-item">
+        <div class="d-flex justify-content-between align-items-center">
+          <div>
+            <span class="text-muted">
+              <sfa-provider-icon providerId="password"></sfa-provider-icon>
+            </span>
+            <sfa-provider-label providerId="password"></sfa-provider-label>
+            <br>
+            <small class="text-muted">
+              <a routerLink="../change-email">Change Email</a>
+              |
+              <a routerLink="../change-password">Change Password</a>
+            </small>
+
+          </div>
+          <div>
+            <a
+              routerLink="../unlink"
+              [queryParams]="{providerId: 'password'}"
+              type="button"
+              *ngIf="userProviderData.ids.length > 1"
+              class="btn btn-sm btn-outline-light"
+              [sfaProviderTitle]="{label: 'Remove', id: 'password'}">
+              <i class="fa fa-fw fa-times text-danger"></i>
+              <span class="sr-only">
+                Remove <sfa-provider-label providerId="password"></sfa-provider-label>
+              </span>
+            </a>
+          </div>
+        </div>
+      </li>
+      <li *ngFor="let id of userProviderData.oauthIds" class="list-group-item">
+        <div class="d-flex justify-content-between align-items-center">
+          <div>
+            <span class="text-muted">
+              <sfa-provider-icon [providerId]="id"></sfa-provider-icon>
+            </span>
+            <sfa-provider-label [providerId]="id"></sfa-provider-label>
+          </div>
+          <div>
+            <a
+              routerLink="../unlink"
+              [queryParams]="{providerId: id}"
+              *ngIf="userProviderData.ids.length > 1"
+              class="btn btn-sm btn-outline-light"
+              [sfaProviderTitle]="{label: 'Remove', id: id}">
+              <i class="fa fa-fw fa-times text-danger"></i>
+              <span class="sr-only">
+                Remove <sfa-provider-label [providerId]="id"></sfa-provider-label>
+              </span>
+            </a>
+          </div>
+        </div>
+      </li>
+    </ul>
+
+    <div *ngIf="userProviderData.canAddPassword || userProviderData.canAddOauth.length > 0" >
+      <small class="text-muted">
+        Add...
+      </small>
+      <div class="list-group">
+        <a
+          *ngIf="userProviderData.canAddPassword"
+          routerLink="../add-password"
+          class="list-group-item list-group-item-action"
+          [sfaProviderTitle]="{label: 'Add', id: 'password'}">
+          <sfa-provider-icon providerId="password"></sfa-provider-icon>
+          Add
+          <sfa-provider-label providerId="password"></sfa-provider-label>
+        </a>
+        <button *ngFor="let id of userProviderData.canAddOauth"
+          type="button"
+          class="list-group-item list-group-item-action"
+          (click)="addProvider(id)"
+          [sfaProviderTitle]="{label: 'Add', id: id}">
+          <sfa-provider-icon [providerId]="id"></sfa-provider-icon>
+          Add
+          <sfa-provider-label [providerId]="id"></sfa-provider-label>
+        </button>
+      </div>
+    </div>
   </div>
+
+
   <sfa-persistence-form></sfa-persistence-form>
 
 

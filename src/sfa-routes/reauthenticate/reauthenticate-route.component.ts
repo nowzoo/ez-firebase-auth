@@ -11,39 +11,36 @@ import { OauthService } from '../oauth.service';
 import { IAuthUserEvent } from '../../sfa/sfa';
 import { OAuthMethod } from '../../sfa/sfa';
 import * as Utils from '../../utils/utils';
+import { SfaBaseComponent } from '../sfa-base.component';
+import { UserProviderData } from '../user-provider-data.class';
 
 @Component({
   selector: 'sfa-reauthenticate-route',
   templateUrl: './reauthenticate-route.component.html',
   styleUrls: ['./reauthenticate-route.component.scss']
 })
-export class ReauthenticateRouteComponent implements OnInit, OnDestroy {
+export class ReauthenticateRouteComponent extends SfaBaseComponent implements OnInit, OnDestroy {
 
-  public redirect: string | null = null;
-  public id: string;
-  public user: firebase.User | null = null;
-  public fg: FormGroup;
-  public submitting = false;
-  public unhandledEmailError: firebase.FirebaseError | null = null;
-  public oAuthProviderIds: string[] = [];
-  public hasEmailProvider = false;
-  public unhandledOAuthError: firebase.FirebaseError | null = null;
-
-  protected ngUnsubscribe: Subject<void> = new Subject<void>();
+  redirect: string | null = null;
+  id: string;
+  user: firebase.User | null;
+  fg: FormGroup;
+  submitting = false;
+  unhandledEmailError: firebase.FirebaseError | null = null;
+  unhandledOAuthError: firebase.FirebaseError | null = null;
+  userProviderData: UserProviderData;
 
   constructor(
     protected route: ActivatedRoute,
     protected fb: FormBuilder,
-    protected authService: SfaService,
-    protected oAuthService: OauthService
-  ) { }
+    protected oAuthService: OauthService,
+    authService: SfaService
+  ) {
+    super(authService)
+   }
 
-  public ngOnDestroy() {
-    this.ngUnsubscribe.next();
-    this.ngUnsubscribe.complete();
-  }
 
-  public ngOnInit() {
+  ngOnInit() {
     this.redirect = this.route.snapshot.queryParams.redirect;
     this.id = _.uniqueId('sfa-reauthenticate-route');
     this.fg = this.fb.group({
@@ -57,31 +54,19 @@ export class ReauthenticateRouteComponent implements OnInit, OnDestroy {
       Utils.clearControlErrors(fcPassword, ['auth/wrong-password']);
     });
 
-    this.oAuthService.checkForReauthenticateRedirect()
-      .then((event: IAuthUserEvent | null) => {
-        if (event) {
-          this.onReauthSuccess();
-        }
+    this.onInitLoadUser()
+      .then(() => {
+        return this.checkForRedirect()
       })
-      .catch((error: firebase.FirebaseError) => {
-        this.unhandledOAuthError = error;
-      });
-
-    this.authService.authState.takeUntil(this.ngUnsubscribe).subscribe((user: firebase.User) => {
-      this.user = user;
-      if (user) {
-        fcEmail.setValue(user.email);
-        const userProviderIds = _.map(user.providerData, 'providerId');
-        this.hasEmailProvider = _.includes(this.authService.configuredProviderIds, 'password') &&
-          _.includes(userProviderIds, 'password');
-        this.oAuthProviderIds = _.filter(this.authService.oAuthProviderIds, (id) => {
-          return _.includes(userProviderIds, id);
-        });
-      }
-    });
+      .then(() => {
+        this.gateToSignedInUser();
+      })
   }
 
-  public emailReauth() {
+  emailReauth() {
+    if (! this.user) {
+      return;
+    }
     this.submitting = true;
     this.unhandledEmailError = null;
     const fcPassword = this.fg.get('password') as FormControl;
@@ -90,6 +75,7 @@ export class ReauthenticateRouteComponent implements OnInit, OnDestroy {
     const credential = firebase.auth.EmailAuthProvider.credential(user.email as string, password);
     user.reauthenticateWithCredential(credential)
       .then(() => {
+        this.submitting = false;
         this.onReauthSuccess();
       })
       .catch((error: firebase.FirebaseError) => {
@@ -105,7 +91,10 @@ export class ReauthenticateRouteComponent implements OnInit, OnDestroy {
       });
   }
 
-  public oAuthReauth(providerId: string) {
+  oAuthReauth(providerId: string) {
+    if (! this.user) {
+      return;
+    }
     this.unhandledOAuthError = null;
     const user = this.user as firebase.User;
     switch (this.authService.oAuthMethod) {
@@ -130,7 +119,25 @@ export class ReauthenticateRouteComponent implements OnInit, OnDestroy {
   }
 
   protected onReauthSuccess() {
-    this.authService.navigate(this.redirect || '', {queryParams: {reauthenticated: 'true'}});
+    this.authService.navigate(this.redirect, {queryParams: {reauthenticated: 'true'}});
+  }
+
+  protected checkForRedirect() {
+    return new Promise<boolean>(resolve => {
+      this.oAuthService.checkForReauthenticateRedirect()
+        .then((event: IAuthUserEvent | null) => {
+          if (event) {
+            this.onReauthSuccess();
+            resolve(true);
+          } else {
+            resolve(false);
+          }
+        })
+        .catch((error: firebase.FirebaseError) => {
+          this.unhandledOAuthError = error;
+          resolve(true);
+        });
+    })
   }
 
 }

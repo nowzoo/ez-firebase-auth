@@ -9,9 +9,9 @@
   <div  *ngSwitchCase="'form'">
     <div class="form-group">
       <p>
-        Are you sure you want to change your email back to {{email}}?
+        Are you sure you want to change your email back to {{actionCodeInfo.email}}?
       </p>
-      <small class="form-text text-muted">Current email: {{fromEmail}}</small>
+      <small class="form-text text-muted">Current email: {{actionCodeInfo.fromEmail}}</small>
     </div>
     <div class="form-group text-right mb-0">
       <button
@@ -31,11 +31,11 @@
   <div *ngSwitchCase="'success'">
     <div class="alert alert-success" role="alert">
         <i class="fa fa-fw fa-check" aria-hidden="true"></i>
-        Your email has been changed back to {{email}}.
+        Your email has been changed back to {{actionCodeInfo.email}}.
     </div>
     <p class="text-right">
       <a *ngIf="user" routerLink="../account">Account</a>
-      <a *ngIf="!user" routerLink="../sign-in" [queryParams]="{email: email}">Sign In</a>
+      <a *ngIf="!user" routerLink="../sign-in" [queryParams]="{email: actionCodeInfo.email}">Sign In</a>
     </p>
   </div>
   <div *ngSwitchCase="'error'">

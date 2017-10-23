@@ -113,7 +113,7 @@
     "source-map-loader": "0.1.5",
     "to-string-loader": "1.1.5",
     "travis-status": "1.0.0",
-    "tslint": "5.4.3",
+    "tslint": "^5.8.0",
     "typescript": "2.3.3",
     "validator": "^9.0.0",
     "wallaby-webpack": "^0.0.42",

@@ -1,44 +1,47 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { Subject } from 'rxjs/Subject';
 import 'rxjs/add/operator/takeUntil';
 import * as firebase from 'firebase';
 import { SfaService } from '../../sfa/sfa.service';
+import { SfaBaseComponent } from '../sfa-base.component';
 
 @Component({
   selector: 'sfa-send-email-verification-link-route',
   templateUrl: './send-email-verification-link-route.component.html',
   styleUrls: ['./send-email-verification-link-route.component.scss']
 })
-export class SendEmailVerificationLinkRouteComponent implements OnInit, OnDestroy {
+export class SendEmailVerificationLinkRouteComponent extends SfaBaseComponent implements OnInit {
 
-  public screen: 'form' | 'success' | 'alreadyVerified' = 'form';
-  public user: firebase.User;
-  public submitting = false;
-  public error: firebase.FirebaseError | null = null;
+  screen: 'form' | 'success' | 'alreadyVerified' = 'form';
+  user: firebase.User;
+  submitting = false;
+  error: firebase.FirebaseError | null = null;
   protected ngUnsubscribe: Subject<void> = new Subject<void>();
 
   constructor(
-    protected authService: SfaService
-  ) { }
-
-  public ngOnDestroy() {
-    this.ngUnsubscribe.next();
-    this.ngUnsubscribe.complete();
+    authService: SfaService
+  ) {
+    super(authService);
   }
-  public ngOnInit() {
+
+
+  ngOnInit() {
     this.authService.onRoute('send-email-verification-link');
-    this.authService.authState.takeUntil(this.ngUnsubscribe).subscribe((user: firebase.User) => {
-      this.user = user;
-      if (! this.user) {
-        this.authService.navigate('sign-in');
-      }
-      if (this.user.emailVerified) {
-        this.screen = 'alreadyVerified';
-      }
-    });
+
+    this.onInitLoadUser()
+      .then(() => {
+        if (! this.user) {
+          this.authService.navigate();
+          return;
+        }
+        if (this.user.emailVerified) {
+          this.screen = 'alreadyVerified';
+        }
+        this.gateToSignedInUser();
+      })
   }
 
-  public submit() {
+  submit() {
     this.submitting = true;
     this.error = null;
     this.user.sendEmailVerification()
@@ -47,6 +50,7 @@ export class SendEmailVerificationLinkRouteComponent implements OnInit, OnDestro
         this.screen = 'success';
       })
       .catch((error: firebase.FirebaseError) => {
+        this.submitting = false;
         this.error = error;
         this.screen = 'form';
       });

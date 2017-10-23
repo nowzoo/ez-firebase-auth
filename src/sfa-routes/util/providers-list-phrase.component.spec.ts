@@ -1,4 +1,4 @@
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import {  ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { ProvidersListPhraseComponent } from './providers-list-phrase.component';
 import { SfaService } from '../../sfa/sfa.service';
@@ -6,7 +6,8 @@ describe('ProvidersListPhraseComponent', () => {
   let component: ProvidersListPhraseComponent;
   let fixture: ComponentFixture<ProvidersListPhraseComponent>;
   const sfaService = {providerLabels: {'twitter.com': 'Twitter', 'facebook.com': 'Facebook', 'github.com': 'GitHub'}};
-  beforeEach(async(() => {
+
+  beforeEach(() => {
     TestBed.configureTestingModule({
       declarations: [ ProvidersListPhraseComponent ],
       providers: [
@@ -14,9 +15,6 @@ describe('ProvidersListPhraseComponent', () => {
       ]
     })
     .compileComponents();
-  }));
-
-  beforeEach(() => {
     fixture = TestBed.createComponent(ProvidersListPhraseComponent);
     component = fixture.componentInstance;
   });

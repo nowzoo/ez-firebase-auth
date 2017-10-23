@@ -13,8 +13,8 @@
       Please sign in again.
     </span>
   </div>
-  <div *ngIf="oAuthProviderIds.length > 0">
-    <p *ngFor="let id of oAuthProviderIds">
+  <div *ngIf="userProviderData.oauthIds.length > 0">
+    <p *ngFor="let id of userProviderData.oauthIds">
       <button
         [sfaProviderTitle]="{label: 'Sign in with', id: id}"
         (click)="oAuthReauth(id)" class="btn btn-outline-primary btn-lg btn-block">
@@ -29,8 +29,8 @@
     </p>
 
   </div>
-  <div *ngIf="hasEmailProvider">
-    <h6 class="card-subtitle mb-2 text-muted" *ngIf="oAuthProviderIds.length > 0">
+  <div *ngIf="userProviderData.hasPassword">
+    <h6 class="card-subtitle mb-2 text-muted" *ngIf="userProviderData.oauthIds.length > 0">
       Sign in with your email and password...
     </h6>
     <form [formGroup]="fg" (ngSubmit)="emailReauth()">

@@ -1,11 +1,9 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { FormBuilder, FormGroup, FormControl, Validators } from '@angular/forms';
 import * as firebase from 'firebase';
-import { Subject } from 'rxjs/Subject';
 import 'rxjs/add/operator/takeUntil';
-import 'rxjs/add/operator/take';
+import { SfaBaseComponent } from '../sfa-base.component';
 import { SfaService } from '../../sfa/sfa.service';
-import { OauthService } from '../oauth.service';
 import * as Utils from '../../utils/utils';
 import * as _ from '../../utils/lodash-funcs';
 
@@ -14,27 +12,24 @@ import * as _ from '../../utils/lodash-funcs';
   templateUrl: './add-password-route.component.html',
   styleUrls: ['./add-password-route.component.scss']
 })
-export class AddPasswordRouteComponent implements OnInit, OnDestroy {
+export class AddPasswordRouteComponent extends SfaBaseComponent implements OnInit {
 
-  public id: string;
-  public fg: FormGroup;
-  public submitting = false;
-  public unhandledError: firebase.FirebaseError | null = null;
-  public user: firebase.User | null = null;
+  id: string;
+  fg: FormGroup;
+  submitting = false;
+  unhandledError: firebase.FirebaseError | null = null;
+  user: firebase.User | null;
 
-  protected ngUnsubscribe: Subject<void> = new Subject<void>();
   constructor(
     protected fb: FormBuilder,
-    protected authService: SfaService,
-    protected oAuthService: OauthService
-  ) { }
-
-  public ngOnDestroy() {
-    this.ngUnsubscribe.next();
-    this.ngUnsubscribe.complete();
+    authService: SfaService,
+  ) {
+    super(authService);
   }
 
-public ngOnInit() {
+
+
+ngOnInit() {
     this.authService.onRoute('add-password');
     this.id = _.uniqueId('sfa-add-password-route');
     this.fg = this.fb.group({
@@ -43,24 +38,16 @@ public ngOnInit() {
     this.fg.get('password').valueChanges.takeUntil(this.ngUnsubscribe).subscribe(() => {
       Utils.clearControlErrors(this.fg.get('password'), ['auth/weak-password']);
     })
-
-    this.authService.authState.takeUntil(this.ngUnsubscribe).subscribe((user: firebase.User) => {
-      this.user = user;
-      if (! user) {
-        return this.authService.navigate('sign-in');
-      }
-      const password = _.find(user.providerData, {providerId: 'password'});
-      if (password) {
-        return this.authService.navigate('account');
-      }
-    });
+    this.onInitLoadUser()
+      .then(() => {
+        this.gateToUserWithNoPassword();
+      })
   }
 
-  public submit() {
+  submit() {
     this.submitting = true;
     this.unhandledError = null;
     const password = this.fg.value.password;
-    console.log(password)
     this.addPassword(this.user as firebase.User, password)
       .then((result: firebase.User) => {
         this.user = result;

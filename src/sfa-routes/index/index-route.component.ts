@@ -5,17 +5,22 @@ import * as _ from '../../utils/lodash-funcs';
 import * as firebase from 'firebase';
 import { OUT_OF_BAND_MODES } from '../sfa-routes';
 import { SfaService } from '../../sfa/sfa.service';
+import { SfaMessages } from '../messages.enum';
+import { SfaBaseComponent } from '../sfa-base.component';
+
 @Component({
   selector: 'sfa-index-route',
   templateUrl: './index-route.component.html',
   styleUrls: ['./index-route.component.scss']
 })
-export class IndexRouteComponent implements OnInit {
+export class IndexRouteComponent extends SfaBaseComponent implements OnInit {
 
   constructor(
     protected route: ActivatedRoute,
-    protected authService: SfaService
-  ) { }
+    authService: SfaService
+  ) {
+    super(authService);
+  }
 
   public ngOnInit() {
     const oobCode = this.route.snapshot.queryParams.oobCode || null;

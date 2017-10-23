@@ -1,4 +1,4 @@
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { ApplicationLabelComponent } from './application-label.component';
 import { SfaService } from '../../sfa/sfa.service';
@@ -6,7 +6,7 @@ describe('ApplicationLabelComponent', () => {
   let component: ApplicationLabelComponent;
   let fixture: ComponentFixture<ApplicationLabelComponent>;
   const sfaService = {applicationLabel: 'Foo Bar'};
-  beforeEach(async(() => {
+  beforeEach(() => {
     TestBed.configureTestingModule({
       declarations: [ ApplicationLabelComponent ],
       providers: [
@@ -14,9 +14,6 @@ describe('ApplicationLabelComponent', () => {
       ]
     })
     .compileComponents();
-  }));
-
-  beforeEach(() => {
     fixture = TestBed.createComponent(ApplicationLabelComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();

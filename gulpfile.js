@@ -203,11 +203,11 @@ gulp.task('clean', ['clean:dist', 'clean:coverage', 'clean:build']);
 
 gulp.task('lint', (cb) => {
   pump([
-    gulp.src(config.allTs),
+    gulp.src('./src/sfa-routes/account/account-route.component.spec.ts'),
     gulpTslint(
       {
         program: tslint.Linter.createProgram('./tsconfig.json'),
-        formatter: 'verbose',
+        formatter: 'stylish',
         configuration: 'tslint.json'
       }),
     gulpTslint.report()
@@ -334,7 +334,7 @@ gulp.task('rollup-bundle', (cb) => {
     const es5Entry = path.join(es5OutputFolder, `${config.unscopedLibraryName}.js`);
     const es2015Entry = path.join(es2015OutputFolder, `${config.unscopedLibraryName}.js`);
     const globals = {
-      // Angular dependencies 
+      // Angular dependencies
       '@angular/core': 'ng.core',
       '@angular/common': 'ng.common',
       '@angular/forms': 'ng.forms',

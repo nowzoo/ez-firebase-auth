@@ -1,4 +1,16 @@
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
+import { BehaviorSubject } from 'rxjs/BehaviorSubject';
+import { MockComponent } from 'ng2-mock-component';
+
+import {
+  MOCK_UTILITIES_DECLARATIONS,
+  MOCK_IMPORTS,
+  MOCK_PROVIDERS,
+  MOCK_ROUTE_GET,
+  MOCK_USER,
+  MOCK_AUTH_SERVICE_GET,
+  MOCK_OAUTH_SERVICE_GET
+ } from '../test';
 
 import { SignInRouteComponent } from './sign-in-route.component';
 
@@ -6,14 +18,22 @@ describe('SignInRouteComponent', () => {
   let component: SignInRouteComponent;
   let fixture: ComponentFixture<SignInRouteComponent>;
 
-  beforeEach(async(() => {
+  beforeEach(() => {
     TestBed.configureTestingModule({
-      declarations: [ SignInRouteComponent ]
+      imports: [...MOCK_IMPORTS],
+      declarations: [
+        SignInRouteComponent,
+        ...MOCK_UTILITIES_DECLARATIONS,
+        MockComponent({ selector: 'sfa-email-sign-in-form', inputs: ['email']}),
+        MockComponent({ selector: 'sfa-oauth-sign-in'}),
+        MockComponent({ selector: 'sfa-persistence-form'})
+      ],
+      providers: [
+        ...MOCK_PROVIDERS
+      ]
+
     })
     .compileComponents();
-  }));
-
-  beforeEach(() => {
     fixture = TestBed.createComponent(SignInRouteComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
