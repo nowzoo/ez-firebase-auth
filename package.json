@@ -23,7 +23,6 @@
   "bugs": {
     "url": "http://github.com/nowzoo/simple-firebase-auth/issues"
   },
-  "private": true,
   "main": "./dist",
   "scripts": {
     "build": "ng-packagr && node build"
