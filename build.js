@@ -11,4 +11,7 @@ fs.readJson('./package.json', (err, result) => {
   }
   const pkg = _.assign({}, dist, s);
   fs.outputJson('./dist/package.json', pkg, {spaces: '\t'})
-})
+});
+
+fs.copy('./LICENSE', './dist/LICENSE');
+fs.copy('./README.md', './dist/README.md');
