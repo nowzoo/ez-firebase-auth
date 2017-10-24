@@ -1,7 +1,7 @@
 {
   "name": "simple-firebase-auth",
   "description": "Simple Firebase Auth for Angular 4.x",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "filename": "./src/simple-firebase-auth.js",
   "homepage": "http://github.com/nowzoo/simple-firebase-auth",
   "author": {
