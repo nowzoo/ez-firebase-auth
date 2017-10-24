@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import * as firebase from 'firebase';
-import * as _ from '../utils/lodash-funcs';
+import * as _ from 'lodash';
 import { SfaService } from '../sfa/sfa.service';
 import { IAuthUserEvent, OAuthMethod } from '../sfa/sfa';
 import { StoredOauthData } from './stored-oauth-data.class';

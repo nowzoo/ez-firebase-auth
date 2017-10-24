@@ -4,7 +4,7 @@ import { Subject } from 'rxjs/Subject';
 import { Observable } from 'rxjs/Observable';
 import 'rxjs/add/operator/combineLatest';
 import 'rxjs/add/operator/takeUntil';
-import * as _ from '../../utils/lodash-funcs';
+import * as _ from 'lodash';
 
 @Directive({
   selector: '[sfaInvalidInput]'

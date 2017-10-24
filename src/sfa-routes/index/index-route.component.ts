@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import 'rxjs/add/operator/take';
-import * as _ from '../../utils/lodash-funcs';
+import * as _ from 'lodash';
 import * as firebase from 'firebase';
 import { OUT_OF_BAND_MODES } from '../sfa-routes';
 import { SfaService } from '../../sfa/sfa.service';

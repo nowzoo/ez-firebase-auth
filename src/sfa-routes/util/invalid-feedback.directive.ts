@@ -3,7 +3,7 @@ import { AbstractControl } from '@angular/forms';
 import { Subject } from 'rxjs/Subject';
 import 'rxjs/add/operator/takeUntil';
 import 'rxjs/add/operator/combineLatest';
-import * as _ from '../../utils/lodash-funcs';
+import * as _ from 'lodash';
 @Directive({
   selector: '[sfaInvalidFeedback]'
 })

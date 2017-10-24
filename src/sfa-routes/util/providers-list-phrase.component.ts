@@ -1,5 +1,5 @@
 import { Component, OnInit, OnChanges, Input } from '@angular/core';
-import * as _ from '../../utils/lodash-funcs';
+import * as _ from 'lodash';
 import { SfaService } from '../../sfa/sfa.service';
 @Component({
   selector: 'sfa-providers-list-phrase',

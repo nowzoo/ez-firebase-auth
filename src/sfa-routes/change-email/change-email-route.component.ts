@@ -3,7 +3,7 @@ import { FormBuilder, FormGroup, Validators, FormControl } from '@angular/forms'
 import { Subject } from 'rxjs/Subject';
 import 'rxjs/add/operator/takeUntil';
 import * as firebase from 'firebase';
-import * as _ from '../../utils/lodash-funcs';
+import * as _ from 'lodash';
 import { SfaService } from '../../sfa/sfa.service';
 import * as Utils from '../../utils/utils';
 import { SfaMessages } from '../messages.enum';

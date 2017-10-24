@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import * as _ from '../../utils/lodash-funcs';
+import * as _ from 'lodash';
 import * as firebase from 'firebase';
 import { SfaService } from '../../sfa/sfa.service';
 import { OauthService } from '../oauth.service';

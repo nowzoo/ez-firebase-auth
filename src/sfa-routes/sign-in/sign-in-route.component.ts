@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import 'rxjs/add/operator/take';
-import * as _ from '../../utils/lodash-funcs';
+import * as _ from 'lodash';
 import { SfaService } from '../../sfa/sfa.service';
 import { SfaBaseComponent } from '../sfa-base.component';
 

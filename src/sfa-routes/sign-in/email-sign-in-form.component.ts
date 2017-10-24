@@ -2,7 +2,7 @@ import { Component, OnInit, Input } from '@angular/core';
 import { FormBuilder, FormGroup, FormControl, Validators } from '@angular/forms';
 import 'rxjs/add/operator/combineLatest';
 import 'rxjs/add/operator/debounceTime';
-import * as _ from '../../utils/lodash-funcs';
+import * as _ from 'lodash';
 import * as firebase from 'firebase';
 import { SfaService } from '../../sfa/sfa.service';
 import * as Utils from '../../utils/utils';

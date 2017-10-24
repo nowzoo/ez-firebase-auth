@@ -1,7 +1,7 @@
 {
   "name": "simple-firebase-auth",
   "description": "Simple Firebase Auth for Angular 4.x",
-  "version": "0.0.1",
+  "version": "1.0.1",
   "filename": "./src/simple-firebase-auth.js",
   "homepage": "http://github.com/nowzoo/simple-firebase-auth",
   "author": {
@@ -25,12 +25,8 @@
   },
   "private": true,
   "main": "./dist",
-  "typings": "./dist",
   "scripts": {
-    "start": "gulp build",
-    "test": " gulp test",
-    "demo": " gulp build:demo",
-    "check-travis": " travis-status --repo=nowzoo/simple-firebase-auth --branch=master --fail-pending || echo 'Not yet passing'"
+    "build": "ng-packagr && node build"
   },
   "peerDependencies": {
     "@angular/common": "^4.4.5",
@@ -40,7 +36,7 @@
     "@angular/router": "^4.4.5",
     "angularfire2": "^5.0.0-rc.3",
     "firebase": "^4.5.2",
-    "lodash-es": "^4.17.4",
+    "lodash": "^4.17.4",
     "rxjs": "5.0.1",
     "validator": "^9.0.0"
   },
@@ -57,8 +53,9 @@
     "@angular/router": "^4.4.5",
     "@compodoc/gulp-compodoc": "0.0.7",
     "@types/jasmine": "2.5.41",
-    "@types/lodash-es": "^4.14.7",
+    "@types/lodash": "^4.14.78",
     "@types/node": "6.0.58",
+    "@types/validator": "^6.3.0",
     "angular-cli-ghpages": "0.5.1",
     "angular2-template-loader": "0.6.2",
     "angularfire2": "^5.0.0-rc.3",
@@ -72,17 +69,7 @@
     "del": "2.2.2",
     "electron": "^1.7.9",
     "firebase": "^4.5.2",
-    "greenkeeper-lockfile": "1.7.2",
-    "gulp": "3.9.1",
-    "gulp-bump": "2.7.0",
-    "gulp-conventional-changelog": "1.1.3",
-    "gulp-coveralls": "0.1.4",
-    "gulp-file": "0.3.0",
-    "gulp-git": "2.4.1",
-    "gulp-hub": "0.8.0",
-    "gulp-inline-ng2-template": "4.0.0",
-    "gulp-tslint": "8.1.1",
-    "gulp-util": "3.0.8",
+    "fs-extra": "^4.0.2",
     "html-loader": "0.4.5",
     "istanbul-instrumenter-loader": "1.2.0",
     "jasmine-core": "2.6.4",
@@ -95,7 +82,8 @@
     "karma-remap-coverage": "0.1.4",
     "karma-sourcemap-loader": "0.3.7",
     "karma-webpack": "2.0.4",
-    "lodash-es": "^4.17.4",
+    "lodash": "^4.17.4",
+    "ng-packagr": "^1.5.0-rc.1",
     "ng2-mock-component": "^0.1.0",
     "node-sass": "4.5.3",
     "postcss": "5.2.17",
@@ -110,13 +98,14 @@
     "run-sequence": "2.0.0",
     "rxjs": "5.0.1",
     "sass-loader": "6.0.6",
+    "shelljs": "^0.7.8",
     "source-map-loader": "0.1.5",
     "to-string-loader": "1.1.5",
     "travis-status": "1.0.0",
     "tslint": "^5.8.0",
     "typescript": "^2.3.3",
     "uglify-js": "^3.1.5",
-    "validator": "^9.0.0",
+    "validator": "^9.1.0",
     "wallaby-webpack": "^0.0.42",
     "webpack": "3.3.0",
     "webpack-dev-middleware": "1.11.0",
@@ -126,41 +115,5 @@
   },
   "engines": {
     "node": ">=6.0.0"
-  },
-  "greenkeeper": {
-    "ignore": [
-      "@angular/core",
-      "@angular/common",
-      "@angular/forms",
-      "@angular/router",
-      "@angular/platform-browser",
-      "@angular/compiler",
-      "@angular/platform-server",
-      "@angular/platform-browser-dynamic",
-      "@angular/compiler-cli",
-      "zone.js",
-      "rxjs",
-      "tslint",
-      "gulp-tslint",
-      "typescript",
-      "codelyzer",
-      "@angular/animations"
-    ]
-  },
-  "commitplease": {
-    "style": "angular",
-    "types": [
-      "feat",
-      "fix",
-      "docs",
-      "style",
-      "refactor",
-      "perf",
-      "test",
-      "chore",
-      "revert",
-      "demo"
-    ],
-    "scope": "\\S+.*"
   }
 }

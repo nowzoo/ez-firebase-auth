@@ -1,5 +1,5 @@
 import * as firebase from 'firebase';
-import * as _ from '../utils/lodash-funcs';
+import * as _ from 'lodash';
 export class UserProviderData {
   ids: string[];
   oauthIds: string[];

@@ -3,7 +3,7 @@ import { FormControl } from '@angular/forms';
 import { Subject } from 'rxjs/Subject';
 import * as firebase from 'firebase';
 import 'rxjs/add/operator/takeUntil';
-import * as _ from '../../utils/lodash-funcs';
+import * as _ from 'lodash';
 import { SfaService } from '../../sfa/sfa.service';
 import { SfaBaseComponent } from '../sfa-base.component';
 

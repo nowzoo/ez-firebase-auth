@@ -5,7 +5,7 @@ import 'rxjs/add/operator/takeUntil';
 import { SfaBaseComponent } from '../sfa-base.component';
 import { SfaService } from '../../sfa/sfa.service';
 import * as Utils from '../../utils/utils';
-import * as _ from '../../utils/lodash-funcs';
+import * as _ from 'lodash';
 
 @Component({
   selector: 'sfa-add-password-route',

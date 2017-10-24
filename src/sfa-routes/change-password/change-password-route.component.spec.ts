@@ -1,6 +1,6 @@
 import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
-import * as _ from '../../utils/lodash-funcs';
+import * as _ from 'lodash';
 import { FormBuilder, FormControl} from '@angular/forms'
 
 import { ChangePasswordRouteComponent } from './change-password-route.component';

@@ -5,7 +5,7 @@ import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 import { Subject } from 'rxjs/Subject';
 import { Observable } from 'rxjs/Observable';
 import * as firebase from 'firebase';
-import * as _ from '../utils/lodash-funcs';
+import * as _ from 'lodash';
 import {
   SUPPORTED_PROVIDERS,
   LOCAL_PERSISTENCE_DISABLED_STORAGE_KEY,

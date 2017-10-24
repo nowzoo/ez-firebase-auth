@@ -4,7 +4,7 @@ import { ActivatedRoute } from '@angular/router';
 import { Subject } from 'rxjs/Subject';
 import 'rxjs/add/operator/takeUntil';
 
-import * as _ from '../../utils/lodash-funcs';
+import * as _ from 'lodash';
 import * as firebase from 'firebase';
 import { SfaService } from '../../sfa/sfa.service';
 import { OauthService } from '../oauth.service';

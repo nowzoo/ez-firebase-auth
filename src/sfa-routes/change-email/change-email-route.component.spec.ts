@@ -2,7 +2,7 @@ import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testin
 import { FormBuilder, FormControl} from '@angular/forms'
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 import { MockComponent } from 'ng2-mock-component';
-import * as _ from '../../utils/lodash-funcs';
+import * as _ from 'lodash';
 
 import { ChangeEmailRouteComponent } from './change-email-route.component';
 import { SfaMessages } from '../messages.enum';

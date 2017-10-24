@@ -1,0 +1,15 @@
+{
+  "$schema": "./node_modules/ng-packagr/ng-package.schema.json",
+  "src": "src",
+  "dest": "dist",
+  "workingDirectory": ".ng_build",
+  "lib": {
+    "entryFile": "index.ts",
+    "externals": {
+      "firebase": "firebase",
+      "angularfire2/auth": "angularfire2.auth",
+      "lodash": "_",
+      "validator": "validator"
+    }
+  }
+}

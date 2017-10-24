@@ -5,7 +5,7 @@ import 'rxjs/add/operator/takeUntil';
 import 'rxjs/add/operator/take';
 import * as firebase from 'firebase';
 
-import * as _ from '../utils/lodash-funcs';
+import * as _ from 'lodash';
 import { SfaService } from '../sfa/sfa.service';
 import { OauthService } from './oauth.service';
 import { IAuthUserEvent } from '../sfa/sfa';

@@ -1,5 +1,5 @@
 import { AbstractControl } from '@angular/forms';
-import * as _ from './lodash-funcs';
+import * as _ from 'lodash';
 import * as firebase from 'firebase';
 import { isEmail } from 'validator';
 
