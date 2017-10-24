@@ -50,6 +50,8 @@ module.exports = function (wallaby) {
       {pattern: 'src/**/*spec.ts', ignore: true}
     ],
 
+    filesWithNoCoverageCalculated: ['src/**/*-helper.js'],
+
     tests: [
       {pattern: 'src/**/*spec.ts', load: false},
       {pattern: 'src/**/*e2e-spec.ts', ignore: true}

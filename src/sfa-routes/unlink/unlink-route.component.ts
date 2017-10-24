@@ -6,52 +6,35 @@ import * as _ from '../../utils/lodash-funcs';
 import * as firebase from 'firebase';
 import { SfaService } from '../../sfa/sfa.service';
 import { IAuthUserEvent} from '../../sfa/sfa';
-
+import { SfaBaseComponent } from '../sfa-base.component';
+import { SfaMessages } from '../messages.enum';
 @Component({
   selector: 'sfa-unlink-route',
   templateUrl: './unlink-route.component.html',
   styleUrls: ['./unlink-route.component.scss']
 })
-export class UnlinkRouteComponent implements OnInit, OnDestroy {
+export class UnlinkRouteComponent extends SfaBaseComponent implements OnInit {
 
-  public user: firebase.User | null = null;
+  user: firebase.User | null;
   public providerId: string | null = null;
   public screen: 'wait'|'form' = 'wait';
   public submitting = false;
   public unhandledError: firebase.FirebaseError | null = null;
 
-  protected ngUnsubscribe: Subject<void> = new Subject<void>();
 
   constructor(
-    protected authService: SfaService,
     protected route: ActivatedRoute,
-  ) { }
+    authService: SfaService,
 
-  public ngOnDestroy() {
-    this.ngUnsubscribe.next();
-    this.ngUnsubscribe.complete();
+  ) {
+    super(authService);
   }
 
   public ngOnInit() {
-    this.providerId = this.route.snapshot.queryParams.providerId || null;
-
-    this.authService.authState.takeUntil(this.ngUnsubscribe).subscribe((user: firebase.User) => {
-      this.user = user;
-      if (! user) {
-        this.authService.navigate('sign-in');
-        return;
-      }
-      if (! this.providerId) {
-        this.authService.navigate('account');
-        return;
-      }
-      const provider = _.find(user.providerData, {providerId: this.providerId}) || null;
-      if (! provider) {
-        this.authService.navigate('account');
-        return;
-      }
-      this.screen = 'form';
-    });
+    this.onInitLoadUser()
+      .then(() => {
+        this.gateByUserAndProvider();
+      })
   }
 
   public submit() {
@@ -60,10 +43,40 @@ export class UnlinkRouteComponent implements OnInit, OnDestroy {
     const user = this.user as firebase.User;
     user.unlink(this.providerId as string)
       .then((event: IAuthUserEvent) => {
-        this.authService.navigate('account');
+        let message: any;
+        switch (this.providerId) {
+          case 'password': message = SfaMessages.passwordRemoved; break;
+          case 'twitter.com': message = SfaMessages.twitterAccountRemoved; break;
+          case 'facebook.com': message = SfaMessages.facebookAccountRemoved; break;
+          case 'google.com': message = SfaMessages.googleAccountRemoved; break;
+          case 'github.com': message = SfaMessages.githubAccountRemoved; break;
+        }
+        this.authService.navigate('account', {queryParams: {message:  message}});
+        this.submitting = false;
       })
       .catch((error: firebase.FirebaseError) => {
+        this.submitting = false;
         this.unhandledError = error;
       });
+  }
+
+  protected gateByUserAndProvider() {
+    this.authService.authState.takeUntil(this.ngUnsubscribe).subscribe((user) => {
+      this.providerId = this.route.snapshot.queryParams.providerId || null;
+      if (! this.providerId) {
+        this.authService.navigate();
+        return;
+      }
+      if (! user) {
+        this.authService.navigate();
+        return;
+      }
+      const provider = _.find(user.providerData, {providerId: this.providerId}) || null;
+      if (! provider) {
+        this.authService.navigate();
+        return;
+      }
+      this.screen = 'form';
+    })
   }
 }

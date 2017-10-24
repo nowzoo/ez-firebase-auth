@@ -50,7 +50,6 @@ describe('VerifyEmailRouteComponent', () => {
       oAuthProviderIds: ['twitter.com', 'facebook.com', 'google.com', 'github.com']
     });
     const route: any = Object.assign({}, MOCK_ROUTE_GET());
-    route.snapshot.queryParams.providerId = 'twitter.com';
     component = new VerifyEmailRouteComponent(route, sfaService);
   });
 

@@ -6,28 +6,31 @@ import * as _ from '../../utils/lodash-funcs';
 import * as firebase from 'firebase';
 import { SfaService } from '../../sfa/sfa.service';
 import * as Utils from '../../utils/utils';
-
+import { SfaBaseComponent } from '../sfa-base.component';
+import { SfaMessages } from '../messages.enum';
 @Component({
   selector: 'sfa-email-sign-in-form',
   templateUrl: './email-sign-in-form.component.html',
   styleUrls: ['./email-sign-in-form.component.scss']
 })
-export class EmailSignInFormComponent implements OnInit {
-  @Input() public email: string = '';
+export class EmailSignInFormComponent extends SfaBaseComponent implements OnInit {
+  @Input() public email = '';
   public id: string;
   public fg: FormGroup;
   public signUpFg: FormGroup;
-  public submitting: boolean = false;
+  public submitting = false;
   public fetchStatus: 'unfetched' | 'fetched' | 'fetching' = 'unfetched';
-  public accountExists: boolean = false;
-  public accountExistsWithoutPassword: boolean = false;
+  public accountExists = false;
+  public accountExistsWithoutPassword = false;
   public accountOAuthProviders: string[] = [];
   public unhandledError: firebase.FirebaseError | null = null;
 
   constructor(
     protected fb: FormBuilder,
-    protected authService: SfaService
-  ) { }
+    authService: SfaService
+  ) {
+    super(authService)
+  }
 
   public ngOnInit() {
     this.id = _.uniqueId('sfa-email-sign-in-form');
@@ -67,31 +70,54 @@ export class EmailSignInFormComponent implements OnInit {
   }
 
   public submit() {
-    const emailFc = this.fg.get('email') as FormControl;
-    const passwordControl = this.fg.get('password') as FormControl;
-    const nameControl = this.signUpFg.get('name') ? this.signUpFg.get('name') as FormControl : null;
 
-    const email = _.trim(emailFc.value).toLowerCase();
-    const password = passwordControl.value;
-    const name = nameControl ? nameControl.value : null;
+    const email = _.trim(this.fg.get('email').value).toLowerCase();
+    const password = this.fg.get('password').value;
+    const name = this.accountExists ? null : _.trim(this.signUpFg.get('name').value);
 
     let user: firebase.User;
     this.submitting = true;
     this.unhandledError = null;
-    this.authService.emailSignIn(email, password, name)
+
+    this.authService.getProviderById('password')
+      .then(() => {
+        if (! this.accountExists) {
+          return this.authService.auth.createUserWithEmailAndPassword(email, password);
+        }
+      })
+      .then(() => {
+        return this.authService.auth.signInWithEmailAndPassword(email, password);
+      })
       .then((result: firebase.User) => {
         user = result;
-        this.submitting = false;
+        if ((! this.accountExists) && this.authService.requireDisplayName) {
+          return user.updateProfile({displayName: name, photoURL: null});
+        }
       })
-      .catch((error: firebase.FirebaseError) => {
+      .then(() => {
+        if ((! this.accountExists) && this.authService.sendEmailVerificationLink) {
+          return user.sendEmailVerification();
+        }
+      })
+      .then(() => {
+        this.authService.authRedirectCancelled = false;
+        this.authService.onSignedIn({
+          user: user,
+          providerId: 'password'
+        });
+        if (! this.authService.authRedirectCancelled) {
+          this.authService.navigate(null, {queryParams: {message: SfaMessages.signedIn}});
+        }
+      })
+      .catch ((error: firebase.FirebaseError) => {
         switch (error.code) {
           case 'auth/invalid-email':
           case 'auth/user-disabled':
-            emailFc.setErrors(Utils.firebaseToFormError(error));
+            this.fg.get('email').setErrors(Utils.firebaseToFormError(error));
             break;
           case 'auth/wrong-password':
           case 'auth/weak-password':
-            passwordControl.setErrors(Utils.firebaseToFormError(error));
+            this.fg.get('password').setErrors(Utils.firebaseToFormError(error));
             break;
           default:
             this.unhandledError = error;
@@ -100,6 +126,8 @@ export class EmailSignInFormComponent implements OnInit {
         this.submitting = false;
       });
   }
+
+
 
   protected fetchAccountByEmail() {
     const ctrl = this.fg.get('email') as FormControl;
@@ -129,7 +157,13 @@ export class EmailSignInFormComponent implements OnInit {
         this.accountOAuthProviders = _.filter(providerIds, (id) => {
           return _.includes(this.authService.oAuthProviderIds, id);
         });
-      });
+      })
+      .catch(() => {
+        this.fetchStatus = 'unfetched';
+        this.accountExists = false;
+        this.accountExistsWithoutPassword = false;
+        this.accountOAuthProviders = [];
+      })
   }
 
 }

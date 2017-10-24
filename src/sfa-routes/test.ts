@@ -4,6 +4,7 @@ import { ActivatedRoute } from '@angular/router';
 import { RouterTestingModule } from '@angular/router/testing';
 import { MockComponent } from 'ng2-mock-component';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
+import { Subject } from 'rxjs/Subject';
 import * as firebase from 'firebase';
 
 import { SfaService } from '../sfa/sfa.service';
@@ -121,13 +122,16 @@ export const MOCK_ROUTE_GET = (qp?) => {
   return {snapshot: {queryParams: qp}};
 };
 export const MOCK_AUTH_SERVICE_GET = () => {
+  const signedIn$: Subject<any> = new Subject();
   return  {
     auth: MOCK_AUTH,
     getProviderById: () => {},
-    onRoute: () => {},
+    onRoute: (e) => {},
     onEmailChanged: () => {},
     navigate: () => {},
     setPersistenceLocal: () => Promise.resolve(),
+    onSignedIn: (e) => signedIn$.next(e),
+    signedIn: signedIn$.asObservable(),
     oAuthProviderIds: [],
     configuredProviderIds: [],
     persistenceLocal: new BehaviorSubject<any>(true),
@@ -143,6 +147,8 @@ export const MOCK_OAUTH_SERVICE_GET = () => {
     checkForSignInRedirect: ()  => Promise.resolve(null),
     linkWithPopup: () => Promise.resolve(null),
     linkWithRedirect: () => Promise.resolve(null),
+    signInWithPopup: () => Promise.resolve(null),
+    signInWithRedirect: () => Promise.resolve(null),
   }
 }
 

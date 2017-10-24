@@ -5,21 +5,24 @@ import { SfaService } from '../../sfa/sfa.service';
 import { OauthService } from '../oauth.service';
 import { OAuthMethod } from '../../sfa/sfa';
 import { IAuthUserEvent } from '../../sfa/sfa';
+import { SfaBaseComponent } from '../sfa-base.component';
 
 @Component({
   selector: 'sfa-oauth-sign-in',
   templateUrl: './oauth-sign-in.component.html',
   styleUrls: ['./oauth-sign-in.component.scss']
 })
-export class OauthSignInComponent implements OnInit {
+export class OauthSignInComponent extends SfaBaseComponent implements OnInit {
 
   public diffCredError: any = null;
   public unhandledCredError: any = null;
   public oAuthProviderIds: string[] = [];
   constructor(
-    protected authService: SfaService,
-    protected oAuthService: OauthService
-  ) { }
+    protected oAuthService: OauthService,
+    authService: SfaService
+  ) {
+  super(authService)
+}
 
   public ngOnInit() {
     this.oAuthProviderIds = _.clone(this.authService.oAuthProviderIds);
