@@ -1,6 +1,3 @@
-
-
-
 const _ = require('lodash');
 const del = require('del');
 const gulp = require('gulp');
