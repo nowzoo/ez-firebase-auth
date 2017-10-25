@@ -1,0 +1,44 @@
+<div [ngSwitch]="screen" *ngIf="user">
+  <div *ngSwitchCase="'form'">
+    <p>We’ll send an email verification link to {{user.email}}.</p>
+    <div class="form-group mb-0 text-right">
+
+      <button type="button" class="btn btn-outline-success btn-lg" [disabled]="submitting" (click)="submit()">
+        <i class="fa fa-fw fa-envelope" aria-hidden="true"></i>
+        Send Verification Link
+      </button>
+      <p class="text-muted" *ngIf="submitting">
+        <ezfa-icon-wait></ezfa-icon-wait>
+        Sending link...
+      </p>
+      <p class="text-muted" *ngIf="error">
+        <ezfa-icon-warning></ezfa-icon-warning>
+        Woops! An unforeseen error occurred. Please try again.
+        <br>
+        <small>Error Code: {{error.code}}</small>
+      </p>
+    </div>
+  </div>
+  <div *ngSwitchCase="'success'">
+    <div class="alert alert-success" role="alert">
+      <p>
+        <ezfa-icon-success></ezfa-icon-success>
+        <strong>Check Your Inbox</strong>
+      </p>
+      <p class="mb-0">
+        An email verification link has been sent to {{user.email}}.
+      </p>
+    </div>
+  </div>
+  <div *ngSwitchCase="'alreadyVerified'">
+    <div class="alert alert-success" role="alert">
+      <ezfa-icon-success></ezfa-icon-success>
+      Email Verified
+    </div>
+    <p class="mb-0">
+      {{user.email}} has already been verified.
+      <a routerLink="../account">View Account</a>
+    </p>
+
+  </div>
+</div>

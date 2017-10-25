@@ -1,0 +1,84 @@
+<p class="text-muted" *ngIf="wait">
+  <i class="fa fa-spin fa-fw fa-refresh"></i> Please wait...
+</p>
+
+<div *ngIf="error">
+  <div [ngSwitch]="error.code" class="alert alert-danger my-3"  role="alert">
+    <p>
+      <i class="fa fa-fw fa-warning"></i>
+      <strong>
+        Account Link Error
+      </strong>
+    </p>
+    <div *ngSwitchCase="'auth/credential-already-in-use'">
+      <p>
+        The <ezfa-provider-label [providerId]="error.credential.providerId"></ezfa-provider-label>
+        account you tried to add is already associated with a different
+        <ezfa-application-label></ezfa-application-label> account ({{error.email}}.)
+      </p>
+      <p class="mb-0">
+        You’re currently signed in as {{user.email}}.
+      </p>
+    </div>
+    <div *ngSwitchCase="'auth/email-already-in-use'">
+      <p>
+        The email for the <ezfa-provider-label [providerId]="error.credential.providerId"></ezfa-provider-label>
+        account you tried to add ({{error.email}}) is already in use by a different
+        <ezfa-application-label></ezfa-application-label> account.
+      </p>
+      <p class="mb-0">
+          You’re currently signed in as {{user.email}}.
+      </p>
+    </div>
+    <div *ngSwitchCase="'auth/cancelled-popup-request'">
+      <p class="mb-0">
+        You closed the <ezfa-provider-label [providerId]="providerId"></ezfa-provider-label>
+        popup window without linking <ezfa-provider-label [providerId]="providerId"></ezfa-provider-label>.
+      </p>
+    </div>
+    <div *ngSwitchCase="'auth/popup-closed-by-user'">
+      <p class="mb-0">
+        You closed the <ezfa-provider-label [providerId]="providerId"></ezfa-provider-label>
+        popup window without linking a <ezfa-provider-label [providerId]="providerId"></ezfa-provider-label>
+        account.
+      </p>
+    </div>
+    <p  *ngSwitchCase="'auth/popup-blocked'" class="mb-0">
+      the popup was blocked.
+    </p>
+    <p *ngSwitchDefault class="mb-0">
+      Unhandled error: {{error | json}}
+    </p>
+
+  </div>
+  <p class="text-muted">
+    Try again...
+    <button class="btn btn-primary btn-block my-1" (click)="link()">
+      Add
+      <ezfa-provider-icon [providerId]="providerId"></ezfa-provider-icon>
+      <ezfa-provider-label [providerId]="providerId"></ezfa-provider-label>
+    </button>
+    <small class="form-text">
+      Make sure the  <ezfa-provider-label [providerId]="providerId"></ezfa-provider-label>
+      account you add is associated with the email address {{user.email}}.
+    </small>
+  </p>
+  <p>
+    <a routerLink="../account" class="btn btn-secondary btn-block">
+      Back to Account
+    </a>
+  </p>
+</div>
+
+<div *ngIf="success">
+  <div class="alert alert-success my-3" role="alert">
+    <ezfa-provider-icon [providerId]="providerId"></ezfa-provider-icon>
+    <ezfa-provider-label [providerId]="providerId"></ezfa-provider-label>
+    added!
+  </div>
+  <p>
+    <a routerLink="../account" class="btn btn-secondary btn-block">
+      Back to Account
+    </a>
+  </p>
+</div>

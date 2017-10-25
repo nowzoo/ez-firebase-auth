@@ -1,4 +1,4 @@
-export * from './sfa/sfa';
-export { SfaService } from './sfa/sfa.service';
-export { SfaModule } from './sfa/sfa.module';
-export { SfaRoutesModule } from './sfa-routes/sfa-routes.module';
+export * from './ezfa/ezfa';
+export { EzfaService } from './ezfa/ezfa.service';
+export { EzfaModule } from './ezfa/ezfa.module';
+export { EzfaRoutesModule } from './ezfa-routes/ezfa-routes.module';

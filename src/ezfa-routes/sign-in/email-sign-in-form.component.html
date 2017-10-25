@@ -1,0 +1,153 @@
+<form [formGroup]="fg" (ngSubmit)="submit()">
+  <div class="form-group">
+    <label [attr.for]="id + 'email'">Email Address</label>
+    <input
+      type="email"
+      class="form-control"
+      placeholder="Email Address"
+      [attr.id]="id + 'email'"
+      [sfaInvalidInput]="fg.get('email')"
+      [attr.aria-describedby]="id + 'emailHelp'"
+      formControlName="email">
+    <div [sfaInvalidFeedback]="fg.get('email')" key="required">
+      Required.
+    </div>
+    <div [sfaInvalidFeedback]="fg.get('email')" [key]="['email', 'auth/invalid-email']">
+      Invalid email address.
+    </div>
+    <div [sfaInvalidFeedback]="fg.get('email')" key="auth/user-disabled">
+      That user account has been disabled.
+    </div>
+
+    <small [attr.id]="id + 'emailHelp'"  class="form-text text-muted">
+      <span *ngIf="'unfetched' === fetchStatus">
+        Enter your email address. If you don’t have an account, we’ll create one for you.
+      </span>
+      <span *ngIf="'fetching' === fetchStatus">
+        <i class="fa fa-fw fa-spin fa-refresh" aria-hidden="true"></i>
+        Looking up account...
+      </span>
+      <span *ngIf="'fetched' === fetchStatus">
+        <span *ngIf="accountExists">
+          <span *ngIf="!accountExistsWithoutPassword">
+            <i class="fa fa-fw fa-check text-success" aria-hidden="true"></i>
+            <ezfa-provider-label providerId="password"></ezfa-provider-label>
+            account found.
+          </span>
+          <span *ngIf="accountExistsWithoutPassword">
+            <i class="fa fa-fw fa-warning text-warning" aria-hidden="true"></i>
+            Account found, but it does not yet have a password. Please sign in with
+            <ezfa-providers-list-phrase [providerIds]="accountOAuthProviders"></ezfa-providers-list-phrase>
+            instead.
+          </span>
+        </span>
+        <span *ngIf="!accountExists">
+          <i class="fa fa-fw fa-check text-success" aria-hidden="true"></i>
+          We’ll create an account for you.
+        </span>
+      </span>
+    </small>
+
+  </div> <!-- email form-group -->
+
+  <div *ngIf="!accountExistsWithoutPassword">
+    <div class="form-group">
+      <label [attr.for]="id + 'password'">
+        <span *ngIf="!accountExists">Choose</span>
+        Password
+      </label>
+      <ezfa-toggleable-password [control]="passwordInput">
+        <input
+          #passwordInput
+          [attr.id]="id + 'password'"
+          class="form-control"
+          [sfaInvalidInput]="fg.get('password')"
+          placeholder="Password"
+          type="password"
+          [attr.aria-describedby]="id + 'passwordHelp'"
+          formControlName="password">
+      </ezfa-toggleable-password>
+      <div [sfaInvalidFeedback]="fg.get('password')" key="required">
+        Required.
+      </div>
+      <div [sfaInvalidFeedback]="fg.get('password')" key="auth/wrong-password">
+        Wrong password.
+      </div>
+      <div [sfaInvalidFeedback]="fg.get('password')" key="auth/weak-password">
+        That password is too weak.
+      </div>
+      <small [attr.id]="id + 'passwordHelp'"  class="form-text text-muted">
+        <span *ngIf="accountExists">
+          <a routerLink="../send-reset-password-link" [queryParams]="{email: fg.get('email').value}">Forgot?</a>
+        </span>
+        <span *ngIf="!accountExists">
+          Please choose a strong password.
+        </span>
+      </small>
+    </div> <!-- password form-group -->
+
+    <div *ngIf="!accountExists" [formGroup]="signUpFg">
+      <div class="form-group" *ngIf="signUpFg.get('name')">
+        <label [attr.for]="id + 'name'">
+          Your Name
+        </label>
+        <input
+          [attr.id]="id + 'name'"
+          class="form-control"
+          [sfaInvalidInput]="signUpFg.get('name')"
+          placeholder="Your Name"
+          type="text"
+          formControlName="name">
+        <div [sfaInvalidFeedback]="signUpFg.get('name')" key="required">
+          Required.
+        </div>
+      </div> <!-- name form-group -->
+      <div class="form-group" *ngIf="signUpFg.get('tos')">
+        <div class="form-check">
+          <label class="form-check-label">
+            <input
+              type="checkbox"
+              class="form-check-input"
+              [value]="true"
+              formControlName="tos">
+            I've read the terms of service.
+          </label>
+        </div>
+        <div [sfaInvalidFeedback]="signUpFg.get('tos')" key="required">
+          Required.
+        </div>
+      </div>
+    </div><!-- *ngIf="!accountExists" -->
+    <div class="form-group text-right">
+      <p *ngIf="accountExists">
+        <button
+          type="submit"
+          [disabled]="submitting || fg.invalid"
+          class="btn btn-lg"
+          [class.btn-outline-dark]="fg.invalid"
+          [class.btn-outline-success]="!fg.invalid">
+          <i class="fa fa-fw fa-sign-in" aria-hidden="true"></i>
+          Sign In
+        </button>
+      </p>
+      <p *ngIf="!accountExists">
+        <button
+          type="submit"
+          [disabled]="submitting || fg.invalid || signUpFg.invalid"
+          class="btn btn-lg"
+          [class.btn-outline-dark]="fg.invalid || signUpFg.invalid"
+          [class.btn-outline-success]="!(fg.invalid || signUpFg.invalid)">
+          <i class="fa fa-fw fa-sign-in" aria-hidden="true"></i>
+          Sign Up
+        </button>
+      </p>
+      <p *ngIf="submitting" class="text-muted">
+        <i class="fa fa-fw fa-spin fa-refresh" aria-hidden="true"></i>
+        <span *ngIf="accountExists">Signing you in...</span>
+        <span *ngIf="!accountExists">Signing you up...</span>
+      </p>
+    </div>
+
+  </div><!-- *ngIf="!accountExistsWithoutPassword" -->
+
+</form>
