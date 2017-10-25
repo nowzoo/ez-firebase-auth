@@ -4,8 +4,8 @@ import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 
 
 import { OauthSignInComponent } from './oauth-sign-in.component';
-import { OAuthMethod } from '../../sfa/sfa';
-import { IAuthUserEvent } from '../../sfa/sfa';
+import { OAuthMethod } from '../../ezfa/ezfa';
+import { IAuthUserEvent } from '../../ezfa/ezfa';
 
 import {
   MOCK_UTILITIES_DECLARATIONS,

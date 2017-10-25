@@ -10,7 +10,7 @@ describe('InvalidFeedbackDirective', () => {
   beforeEach (() => {
     fc = new FormControl('');
     directive = new  InvalidFeedbackDirective(renderer, elementRef);
-    directive.sfaInvalidFeedback = fc;
+    directive.ezfaInvalidFeedback = fc;
     directive.key = 'foo';
     // spyOn(renderer, 'addClass').and.callThrough();
     // spyOn(renderer, 'removeClass').and.callThrough();

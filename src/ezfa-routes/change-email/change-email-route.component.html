@@ -8,21 +8,21 @@
         <input
           [attr.id]="id + 'email'"
           class="form-control"
-          [sfaInvalidInput]="fg.get('email')"
+          [ezfaInvalidInput]="fg.get('email')"
           placeholder="New Email"
           type="email"
           [attr.aria-describedby]="id + 'emailHelp'"
           formControlName="email">
-        <div [sfaInvalidFeedback]="fg.get('email')" key="required">
+        <div [ezfaInvalidFeedback]="fg.get('email')" key="required">
           Required.
         </div>
-        <div [sfaInvalidFeedback]="fg.get('email')" [key]="['auth/invalid-email', 'email']">
+        <div [ezfaInvalidFeedback]="fg.get('email')" [key]="['auth/invalid-email', 'email']">
           Invalid email address.
         </div>
-        <div [sfaInvalidFeedback]="fg.get('email')" key="auth/email-already-in-use">
+        <div [ezfaInvalidFeedback]="fg.get('email')" key="auth/email-already-in-use">
           That email is already in use.
         </div>
-        <div [sfaInvalidFeedback]="fg.get('email')" key="same">
+        <div [ezfaInvalidFeedback]="fg.get('email')" key="same">
           That’s the same as your current email.
         </div>
 

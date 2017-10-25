@@ -41,7 +41,7 @@
           class="form-control"
           placeholder="Email Address"
           [attr.id]="id + 'email'"
-          [sfaInvalidInput]="fg.get('email')"
+          [ezfaInvalidInput]="fg.get('email')"
           formControlName="email">
       </div><!-- email fg -->
       <div class="form-group">
@@ -53,16 +53,16 @@
             #passwordInput
             [attr.id]="id + 'password'"
             class="form-control"
-            [sfaInvalidInput]="fg.get('password')"
+            [ezfaInvalidInput]="fg.get('password')"
             placeholder="Password"
             type="password"
             [attr.aria-describedby]="id + 'passwordHelp'"
             formControlName="password">
         </ezfa-toggleable-password>
-        <div [sfaInvalidFeedback]="fg.get('password')" key="required">
+        <div [ezfaInvalidFeedback]="fg.get('password')" key="required">
           Required.
         </div>
-        <div [sfaInvalidFeedback]="fg.get('password')" key="auth/wrong-password">
+        <div [ezfaInvalidFeedback]="fg.get('password')" key="auth/wrong-password">
           Wrong password.
         </div>
         <small [attr.id]="id + 'passwordHelp'"  class="form-text text-muted">

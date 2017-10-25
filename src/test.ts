@@ -7,12 +7,12 @@ import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 import { Subject } from 'rxjs/Subject';
 import * as firebase from 'firebase';
 
-import { EzfaService } from '../sfa/sfa.service';
-import { OauthService } from './oauth.service';
+import { EzfaService } from './ezfa/ezfa.service';
+import { OauthService } from './ezfa-routes/oauth.service';
 
 
 @Directive({
-  selector: '[sfaProviderTitle]'
+  selector: '[ezfaProviderTitle]'
 })
 class MockProviderTitleDirective  {
   @Input() public sfaProviderTitle: {label: string, id: string};
@@ -28,8 +28,8 @@ export const MOCK_UTILITIES_DECLARATIONS = [
   MockComponent({ selector: 'ezfa-icon-wait'}),
   MockComponent({ selector: 'ezfa-icon-warning'}),
   MockComponent({ selector: 'ezfa-icon-success'}),
-  MockComponent({ selector: '[sfaInvalidInput]', inputs: ['sfaInvalidInput'] }),
-  MockComponent({ selector: '[sfaInvalidFeedback]', inputs: ['sfaInvalidFeedback', 'key'] }),
+  MockComponent({ selector: '[ezfaInvalidInput]', inputs: ['ezfaInvalidInput'] }),
+  MockComponent({ selector: '[ezfaInvalidFeedback]', inputs: ['ezfaInvalidFeedback', 'key'] }),
 ];
 
 

@@ -8,7 +8,7 @@ import * as _ from 'lodash';
   selector: '[ezfaInvalidFeedback]'
 })
 export class InvalidFeedbackDirective implements  AfterViewInit, OnDestroy {
-  @Input() public sfaInvalidFeedback: AbstractControl;
+  @Input() public ezfaInvalidFeedback: AbstractControl;
   @Input() public key: string| string[];
   protected ngUnsubscribe: Subject<void> = new Subject<void>();
   constructor(
@@ -22,8 +22,8 @@ export class InvalidFeedbackDirective implements  AfterViewInit, OnDestroy {
     this.renderer.addClass($el, 'invalid-feedback');
     this.hide();
 
-    this.sfaInvalidFeedback.statusChanges
-      .combineLatest(this.sfaInvalidFeedback.valueChanges)
+    this.ezfaInvalidFeedback.statusChanges
+      .combineLatest(this.ezfaInvalidFeedback.valueChanges)
       .takeUntil(this.ngUnsubscribe).subscribe(() => {
         this.update();
       });
@@ -49,12 +49,12 @@ export class InvalidFeedbackDirective implements  AfterViewInit, OnDestroy {
     const keys = _.isArray(this.key) ? this.key : [this.key];
     let hasError = false;
     _.each(keys, (key) => {
-      if (this.sfaInvalidFeedback.hasError(key)) {
+      if (this.ezfaInvalidFeedback.hasError(key)) {
         hasError = true;
       }
     });
-    const shown = this.sfaInvalidFeedback.dirty &&
-        this.sfaInvalidFeedback.invalid &&
+    const shown = this.ezfaInvalidFeedback.dirty &&
+        this.ezfaInvalidFeedback.invalid &&
         hasError;
     if (shown) {
       this.show();

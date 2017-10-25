@@ -6,16 +6,16 @@
       class="form-control"
       placeholder="Email Address"
       [attr.id]="id + 'email'"
-      [sfaInvalidInput]="fg.get('email')"
+      [ezfaInvalidInput]="fg.get('email')"
       [attr.aria-describedby]="id + 'emailHelp'"
       formControlName="email">
-    <div [sfaInvalidFeedback]="fg.get('email')" key="required">
+    <div [ezfaInvalidFeedback]="fg.get('email')" key="required">
       Required.
     </div>
-    <div [sfaInvalidFeedback]="fg.get('email')" [key]="['email', 'auth/invalid-email']">
+    <div [ezfaInvalidFeedback]="fg.get('email')" [key]="['email', 'auth/invalid-email']">
       Invalid email address.
     </div>
-    <div [sfaInvalidFeedback]="fg.get('email')" key="auth/user-disabled">
+    <div [ezfaInvalidFeedback]="fg.get('email')" key="auth/user-disabled">
       That user account has been disabled.
     </div>
 
@@ -61,19 +61,19 @@
           #passwordInput
           [attr.id]="id + 'password'"
           class="form-control"
-          [sfaInvalidInput]="fg.get('password')"
+          [ezfaInvalidInput]="fg.get('password')"
           placeholder="Password"
           type="password"
           [attr.aria-describedby]="id + 'passwordHelp'"
           formControlName="password">
       </ezfa-toggleable-password>
-      <div [sfaInvalidFeedback]="fg.get('password')" key="required">
+      <div [ezfaInvalidFeedback]="fg.get('password')" key="required">
         Required.
       </div>
-      <div [sfaInvalidFeedback]="fg.get('password')" key="auth/wrong-password">
+      <div [ezfaInvalidFeedback]="fg.get('password')" key="auth/wrong-password">
         Wrong password.
       </div>
-      <div [sfaInvalidFeedback]="fg.get('password')" key="auth/weak-password">
+      <div [ezfaInvalidFeedback]="fg.get('password')" key="auth/weak-password">
         That password is too weak.
       </div>
       <small [attr.id]="id + 'passwordHelp'"  class="form-text text-muted">
@@ -94,11 +94,11 @@
         <input
           [attr.id]="id + 'name'"
           class="form-control"
-          [sfaInvalidInput]="signUpFg.get('name')"
+          [ezfaInvalidInput]="signUpFg.get('name')"
           placeholder="Your Name"
           type="text"
           formControlName="name">
-        <div [sfaInvalidFeedback]="signUpFg.get('name')" key="required">
+        <div [ezfaInvalidFeedback]="signUpFg.get('name')" key="required">
           Required.
         </div>
       </div> <!-- name form-group -->
@@ -113,7 +113,7 @@
             I've read the terms of service.
           </label>
         </div>
-        <div [sfaInvalidFeedback]="signUpFg.get('tos')" key="required">
+        <div [ezfaInvalidFeedback]="signUpFg.get('tos')" key="required">
           Required.
         </div>
       </div>

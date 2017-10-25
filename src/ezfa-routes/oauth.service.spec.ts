@@ -2,7 +2,7 @@ import { TestBed, inject, fakeAsync, tick } from '@angular/core/testing';
 import * as firebase from 'firebase';
 
 import { OauthService } from './oauth.service';
-import { EzfaService } from '../sfa/sfa.service';
+import { EzfaService } from '../ezfa/ezfa.service';
 import { StoredOauthData } from './stored-oauth-data.class';
 
 

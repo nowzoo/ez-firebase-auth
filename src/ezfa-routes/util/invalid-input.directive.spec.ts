@@ -10,7 +10,7 @@ describe('InvalidInputDirective', () => {
   beforeEach (() => {
     fc = new FormControl('');
     directive = new  InvalidInputDirective(renderer, elementRef);
-    directive.sfaInvalidInput = fc;
+    directive.ezfaInvalidInput = fc;
     // spyOn(renderer, 'addClass').and.callThrough();
     // spyOn(renderer, 'removeClass').and.callThrough();
   })

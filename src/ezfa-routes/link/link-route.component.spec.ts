@@ -18,7 +18,7 @@ import {
  } from '../../test';
 
 
-import { OAuthMethod, IAuthUserEvent } from '../../sfa/sfa';
+import { OAuthMethod, IAuthUserEvent } from '../../ezfa/ezfa';
 import { LinkRouteComponent } from './link-route.component';
 import { SfaMessages } from '../messages.enum';
 

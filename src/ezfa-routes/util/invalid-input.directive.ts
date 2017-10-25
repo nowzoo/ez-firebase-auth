@@ -10,7 +10,7 @@ import * as _ from 'lodash';
   selector: '[ezfaInvalidInput]'
 })
 export class InvalidInputDirective implements AfterViewInit, OnDestroy {
-  @Input() public sfaInvalidInput: AbstractControl;
+  @Input() public ezfaInvalidInput: AbstractControl;
 
   protected ngUnsubscribe: Subject<void> = new Subject<void>();
 
@@ -20,8 +20,8 @@ export class InvalidInputDirective implements AfterViewInit, OnDestroy {
   ) { }
 
   public ngAfterViewInit() {
-    this.sfaInvalidInput.statusChanges
-      .combineLatest(this.sfaInvalidInput.valueChanges)
+    this.ezfaInvalidInput.statusChanges
+      .combineLatest(this.ezfaInvalidInput.valueChanges)
       .takeUntil(this.ngUnsubscribe).subscribe(() => {
         this.update();
       });
@@ -35,7 +35,7 @@ export class InvalidInputDirective implements AfterViewInit, OnDestroy {
 
   protected update() {
     const $el = this.elementRef.nativeElement;
-    if (this.sfaInvalidInput.invalid && this.sfaInvalidInput.dirty) {
+    if (this.ezfaInvalidInput.invalid && this.ezfaInvalidInput.dirty) {
       this.renderer.addClass($el, 'is-invalid');
     } else {
       this.renderer.removeClass($el, 'is-invalid');

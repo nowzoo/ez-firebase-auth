@@ -1,8 +1,8 @@
 import { Injectable } from '@angular/core';
 import * as firebase from 'firebase';
 import * as _ from 'lodash';
-import { EzfaService } from '../sfa/sfa.service';
-import { IAuthUserEvent, OAuthMethod } from '../sfa/sfa';
+import { EzfaService } from '../ezfa/ezfa.service';
+import { IAuthUserEvent, OAuthMethod } from '../ezfa/ezfa';
 import { StoredOauthData } from './stored-oauth-data.class';
 
 @Injectable()

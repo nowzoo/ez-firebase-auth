@@ -4,8 +4,8 @@ import * as firebase from 'firebase';
 
 import { EzfaService } from '../../ezfa/ezfa.service';
 import { OauthService } from '../oauth.service';
-import { IAuthUserEvent } from '../../sfa/sfa';
-import { OAuthMethod } from '../../sfa/sfa';
+import { IAuthUserEvent } from '../../ezfa/ezfa';
+import { OAuthMethod } from '../../ezfa/ezfa';
 import { BaseComponent } from '../base.component';
 import { SfaMessages } from '../messages.enum';
 

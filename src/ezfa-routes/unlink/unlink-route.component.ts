@@ -5,7 +5,7 @@ import 'rxjs/add/operator/takeUntil';
 import * as _ from 'lodash';
 import * as firebase from 'firebase';
 import { EzfaService } from '../../ezfa/ezfa.service';
-import { IAuthUserEvent} from '../../sfa/sfa';
+import { IAuthUserEvent} from '../../ezfa/ezfa';
 import { BaseComponent } from '../base.component';
 import { SfaMessages } from '../messages.enum';
 @Component({

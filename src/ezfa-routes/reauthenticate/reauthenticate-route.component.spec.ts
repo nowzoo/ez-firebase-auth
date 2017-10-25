@@ -11,8 +11,8 @@ import {
   MOCK_AUTH_SERVICE_GET,
   MOCK_OAUTH_SERVICE_GET
  } from '../../test';
- import { IAuthUserEvent } from '../../sfa/sfa';
- import { OAuthMethod } from '../../sfa/sfa';
+ import { IAuthUserEvent } from '../../ezfa/ezfa';
+ import { OAuthMethod } from '../../ezfa/ezfa';
 
 import { ReauthenticateRouteComponent } from './reauthenticate-route.component';
 

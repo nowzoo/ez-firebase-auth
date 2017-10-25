@@ -5,7 +5,7 @@ import {
   MOCK_USER_INFO_GOOGLE,
   MOCK_USER_INFO_TWITTER,
   MOCK_USER_INFO_FACEBOOK
-} from './test';
+} from '../test';
 
 import { UserProviderData } from './user-provider-data.class';
 

@@ -7,7 +7,7 @@ import { EzfaService } from '../../ezfa/ezfa.service';
 import { BaseComponent } from '../base.component';
 import { OauthService } from '../oauth.service';
 import { SfaMessages } from '../messages.enum';
-import { OAuthMethod } from '../../sfa/sfa';
+import { OAuthMethod } from '../../ezfa/ezfa';
 import { UserProviderData } from '../user-provider-data.class';
 
 @Component({

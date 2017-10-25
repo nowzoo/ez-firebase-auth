@@ -3,8 +3,8 @@ import * as _ from 'lodash';
 import * as firebase from 'firebase';
 import { EzfaService } from '../../ezfa/ezfa.service';
 import { OauthService } from '../oauth.service';
-import { OAuthMethod } from '../../sfa/sfa';
-import { IAuthUserEvent } from '../../sfa/sfa';
+import { OAuthMethod } from '../../ezfa/ezfa';
+import { IAuthUserEvent } from '../../ezfa/ezfa';
 import { BaseComponent } from '../base.component';
 
 @Component({
