@@ -1,6 +1,6 @@
 {
   "$schema": "./node_modules/ng-packagr/ng-package.schema.json",
-  "src": "src",
+  "src": "src/ezfa",
   "dest": "dist",
   "workingDirectory": ".ng_build",
   "lib": {

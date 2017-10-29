@@ -1,28 +1,41 @@
 import { TestBed, inject, fakeAsync, tick } from '@angular/core/testing';
-import { Router, NavigationExtras } from '@angular/router';
-import { EzfaService } from './ezfa.service';
+import { Router } from '@angular/router';
 import 'rxjs/add/operator/take';
-import {
-  EzfaOptions, OAuthMethod,
-  EzfaProviderLabels, LOCAL_PERSISTENCE_DISABLED_STORAGE_KEY,
-  IAuthUserEvent,
-  IAuthEmailChangedEvent
-} from './ezfa';
-import {AngularFireAuth } from 'angularfire2/auth';
 import * as firebase from 'firebase';
+import { AngularFireAuth } from 'angularfire2/auth';
+import { EzfaOptions } from './ezfa-options.class';
+import { EzfaProviderLabels } from './ezfa-provider-labels.class';
+import { EzfaOauthMethod } from './ezfa-oauth-method.enum';
+import { EzfaSignedInEvent } from './ezfa-signed-in-event.class';
+import { EzfaSignedOutEvent } from './ezfa-signed-out-event.class';
+import { EzfaEmailChangedEvent } from './ezfa-email-changed-event.class';
+import { EzfaProviderLinkedEvent } from './ezfa-provider-linked-event.class';
+import { EzfaProviderUnlinkedEvent } from './ezfa-provider-unlinked-event.class';
 
-const options = new EzfaOptions();
+import { MOCK_USER, MOCK_USER_CRED} from './test';
 
+import { EzfaService } from './ezfa.service';
 describe('EzfaService', () => {
+  let router;
+  let options;
+  let afAuth;
   beforeEach(() => {
+    router = {navigate: () => Promise.resolve(true)};
+    options = new EzfaOptions();
+    options.rootSlug = 'auth';
+    options.applicationLabel = 'Test App';
+    afAuth = {auth: {setPersistence: () => Promise.resolve()}, authState: {foo: 8}};
     TestBed.configureTestingModule({
       providers: [
         EzfaService,
+        {provide: AngularFireAuth, useValue: afAuth},
         {provide: EzfaOptions, useValue: options},
-        {provide: AngularFireAuth, useValue: {}},
-        {provide: Router, useValue: {}}
+        {provide: Router, useValue: router}
       ]
     });
+    router = TestBed.get(Router);
+    options = TestBed.get(EzfaOptions);
+    afAuth = TestBed.get(AngularFireAuth);
   });
 
   it('should be created', () => {
@@ -30,572 +43,379 @@ describe('EzfaService', () => {
     expect(service).toBeTruthy();
   });
 
-  describe('get auth()', () => {
-    const auth = {foo: 8};
+  describe('constructor setting oauthMethod', () => {
+    describe('when set to popup', () => {
+      beforeEach(() => {
+        const changed = Object.assign(options, {oauthMethod: EzfaOauthMethod.popup});
+        TestBed.overrideProvider(EzfaOptions, {useValue: changed});
+      });
+      it('should set the ouath method to popup if that is passed', () => {
+        const service: EzfaService = TestBed.get(EzfaService);
+        expect(service.oauthMethod).toBe(EzfaOauthMethod.popup);
+      });
+    });
+    describe('when not set', () => {
+      beforeEach(() => {
+        const changed = Object.assign(options, {oauthMethod: EzfaOauthMethod.popup});
+        delete changed.oauthMethod;
+        TestBed.overrideProvider(EzfaOptions, {useValue: changed});
+      });
+      it('should set the ouath method to redirect if missing', () => {
+        const service: EzfaService = TestBed.get(EzfaService);
+        expect(service.oauthMethod).toBe(EzfaOauthMethod.redirect);
+      });
+    });
+    describe('when set to redirect', () => {
+      beforeEach(() => {
+        const changed = Object.assign(options, {oauthMethod: EzfaOauthMethod.redirect});
+        TestBed.overrideProvider(EzfaOptions, {useValue: changed});
+      });
+      it('should set the ouath method to redirect if missing', () => {
+        const service: EzfaService = TestBed.get(EzfaService);
+        expect(service.oauthMethod).toBe(EzfaOauthMethod.redirect);
+      });
+    });
+  });
+  describe('getters', () => {
+    let service: EzfaService;
     beforeEach(() => {
-      TestBed.overrideProvider(AngularFireAuth, { useValue: {auth: auth}});
-    })
-    it ('should return the auth',  () => {
-      const service: EzfaService = TestBed.get(EzfaService);
-      expect(service.auth).toBe(auth);
-    })
-  })
-
-  describe('get authState()', () => {
-    const authState = {foo: 8};
-    beforeEach(() => {
-      TestBed.overrideProvider(AngularFireAuth, { useValue: {authState: authState}});
-    })
-    it ('should return the authState',  () => {
-      const service: EzfaService = TestBed.get(EzfaService);
-      expect(service.authState).toBe(authState);
-    })
-  })
-
-  describe('get applicationLabel()', () => {
-    const opt = {applicationLabel: 'foo'};
-    beforeEach(() => {
-      TestBed.overrideProvider(EzfaOptions, { useValue: opt});
-    })
-    it ('should return the value',   () => {
-      const service: EzfaService = TestBed.get(EzfaService);
-      expect(service.applicationLabel).toBe('foo');
-    })
-  })
-
-  describe('get rootSlug()', () => {
-    const opt = {rootSlug: 'foo'};
-    beforeEach(() => {
-      TestBed.overrideProvider(EzfaOptions, { useValue: opt});
-    })
-    it ('should return the value',   () => {
-      const service: EzfaService = TestBed.get(EzfaService);
-      expect(service.rootSlug).toBe('foo');
-    })
-  })
-
-  describe('get configuredProviderIds()', () => {
-    const opt = {configuredProviderIds: ['password']};
-    beforeEach(() => {
-      TestBed.overrideProvider(EzfaOptions, { useValue: opt});
-    })
-    it ('should return the value', () => {
-      const service: EzfaService = TestBed.get(EzfaService);
-      expect(service.configuredProviderIds).toEqual(['password']);
-    })
-  })
-  describe('get oAuthProviderIds()', () => {
-    const opt = {configuredProviderIds: ['password', 'twitter.com']};
-    beforeEach(() => {
-      TestBed.overrideProvider(EzfaOptions, { useValue: opt});
-    })
-    it ('should return the value',   () => {
-      const service: EzfaService = TestBed.get(EzfaService);
-      expect(service.oAuthProviderIds).toEqual(['twitter.com']);
-    })
-  })
-  describe('get providerById()', () => {
-    const allIds =  ['password', 'twitter.com', 'facebook.com', 'github.com', 'google.com'];
-    let opt: any = {
-      configuredProviderIds: allIds,
-    };
-    beforeEach( () => {
-      TestBed.overrideProvider(EzfaOptions, { useValue: opt});
+      service = TestBed.get(EzfaService);
+    });
+    it('should return the auth from from AngularFireAuth', () => {
+      expect(service.auth).toBe(afAuth.auth);
+    });
+    it('should return the authState from AngularFireAuth', () => {
+      expect(service.authState).toBe(afAuth.authState);
+    });
+    it('should return the applicationLabel from the options', () => {
+      expect(service.applicationLabel).toBe(options.applicationLabel);
+    });
+    it('should return the rootSlug from the options', () => {
+      expect(service.rootSlug).toBe(options.rootSlug);
+    });
+    describe('get providerIds', () => {
+      it('should return whatever was passed in options.providerIds', () => {
+        options.providerIds = [];
+        expect(service.providerIds).toEqual([]);
+        options.providerIds = ['twitter.com'];
+        expect(service.providerIds).toEqual(['twitter.com']);
+      });
+      it('should limit whatever was passed in options.providerIds to the enabled providers', () => {
+        options.providerIds = ['twitter.com', 'phone'];
+        expect(service.providerIds).toEqual(['twitter.com']);
+      });
+    });
+    describe('get requireDisplayName()', () => {
+      it ('should return true if missing in options',   () => {
+        delete options.requireDisplayName;
+        expect(service.requireDisplayName).toBe(true);
+      });
+      it ('should return true if true in options',   () => {
+        options.requireDisplayName = true;
+        expect(service.requireDisplayName).toBe(true);
+      });
+      it ('should return false if false in options',   () => {
+        options.requireDisplayName = false;
+        expect(service.requireDisplayName).toBe(false);
+      });
     });
 
-    it ('should return a default value for each provider', fakeAsync(() => {
-      const service: EzfaService = TestBed.get(EzfaService);
-      let provider: any;
-      service.getProviderById('password').then((result: any) => provider = result);
-      tick();
-      expect(provider.providerId).toBe('password')
+    describe('get requireTos()', () => {
+      it ('should return true if missing in options',   () => {
+        delete options.requireTos;
+        expect(service.requireTos).toBe(true);
+      });
+      it ('should return true if true in options',   () => {
+        options.requireTos = true;
+        expect(service.requireTos).toBe(true);
+      });
+      it ('should return false if false in options',   () => {
+        options.requireTos = false;
+        expect(service.requireTos).toBe(false);
+      });
+    });
 
+    describe('get sendEmailVerificationLink()', () => {
+      it ('should return true if missing in options',   () => {
+        delete options.sendEmailVerificationLink;
+        expect(service.sendEmailVerificationLink).toBe(true);
+      });
+      it ('should return true if true in options',   () => {
+        options.sendEmailVerificationLink = true;
+        expect(service.sendEmailVerificationLink).toBe(true);
+      });
+      it ('should return false if false in options',   () => {
+        options.sendEmailVerificationLink = false;
+        expect(service.sendEmailVerificationLink).toBe(false);
+      });
+    });
+  });
+
+  describe('set oauthMethod', () => {
+    let service: EzfaService;
+    beforeEach(() => {
+      service = TestBed.get(EzfaService);
+    });
+    it('should set the method', () => {
+      expect(service.oauthMethod).toBe(EzfaOauthMethod.redirect);
+      service.oauthMethod = EzfaOauthMethod.popup;
+      expect(service.oauthMethod).toBe(EzfaOauthMethod.popup);
+
+    });
+  });
+
+  describe('localPersistenceEnabled', () => {
+    let service: EzfaService;
+    describe('init when it has been disabled', () => {
+      beforeEach(() => {
+        spyOn(localStorage, 'getItem').and.callFake(() =>  'yes');
+        service = TestBed.get(EzfaService);
+      });
+      it('should init the subject with false', fakeAsync(() => {
+        let enabled;
+        service.localPersistenceEnabled.take(1).subscribe(val => enabled = val);
+        expect(enabled).toBe(false);
+      }));
+    });
+    describe('init when it has not been disabled', () => {
+      beforeEach(() => {
+        spyOn(localStorage, 'getItem').and.callFake(() => undefined);
+        service = TestBed.get(EzfaService);
+      });
+      it('should init the subject with false', fakeAsync(() => {
+        let enabled;
+        service.localPersistenceEnabled.take(1).subscribe(val => enabled = val);
+        expect(enabled).toBe(true);
+      }));
+    });
+    describe('setPersistenceLocal', () => {
+      let enabled;
+      beforeEach(() => {
+        enabled = undefined;
+        spyOn(localStorage, 'setItem').and.callFake(() => {} );
+        spyOn(localStorage, 'removeItem').and.callFake(() => {} );
+        service = TestBed.get(EzfaService);
+        spyOn(service.auth, 'setPersistence').and.callThrough();
+
+      });
+      it('should make the right calls with false', fakeAsync(() => {
+        service.setPersistenceLocal(false);
+        expect(service.auth.setPersistence).toHaveBeenCalledWith(firebase.auth.Auth.Persistence.SESSION);
+        tick();
+        expect(localStorage.setItem).toHaveBeenCalledWith(EzfaService.STORAGE_KEY_PERSISTENCE, 'yes');
+        service.localPersistenceEnabled.take(1).subscribe(val => enabled = val);
+        expect(enabled).toBe(false);
+      }));
+      it('should make the right calls with true', fakeAsync(() => {
+        service.setPersistenceLocal(true);
+        expect(service.auth.setPersistence).toHaveBeenCalledWith(firebase.auth.Auth.Persistence.LOCAL);
+        tick();
+        expect(localStorage.removeItem).toHaveBeenCalledWith(EzfaService.STORAGE_KEY_PERSISTENCE);
+        service.localPersistenceEnabled.take(1).subscribe(val => enabled = val);
+        expect(enabled).toBe(true);
+      }));
+    });
+  });
+
+
+  describe('getProviderById()', () => {
+    let service: EzfaService;
+    beforeEach(() => {
+      service = TestBed.get(EzfaService);
+    });
+    EzfaService.ENABLED_PROVIDERS.forEach((id) => {
+      it ('should return a default value for ' + id, fakeAsync(() => {
+        let provider: any;
+        options.providerIds = [id];
+        service.getProviderById(id).then((result: any) => provider = result);
+        tick();
+        expect(provider.providerId).toBe(id);
+      }));
+    });
+    it('should reject if passed a provider not configured in the options', fakeAsync(() => {
+      let code: string|null = null;
+      options.providerIds = ['password'];
+      service.getProviderById('facebook.com').catch((err: any) => code = err.code);
+      tick();
+      expect(code).toBe('ezfa/provider-not-configured');
+    }));
+    it('should resolve with custom provider if one has been passed in providers', fakeAsync(() => {
+      let provider;
+      options.providerIds = ['twitter.com'];
+      options.providers = [{providerId: 'twitter.com', custom: true}];
       service.getProviderById('twitter.com').then((result: any) => provider = result);
       tick();
-      expect(provider.providerId).toBe('twitter.com');
+      expect(provider.custom).toBe(true);
+    }));
 
-      service.getProviderById('github.com').then((result: any) => provider = result);
-      tick();
-      expect(provider.providerId).toBe('github.com')
-
-      service.getProviderById('google.com').then((result: any) => provider = result);
-      tick();
-      expect(provider.providerId).toBe('google.com');
-
-      service.getProviderById('facebook.com').then((result: any) => provider = result);
-      tick();
-      expect(provider.providerId).toBe('facebook.com')
-    }))
-    describe('unconfigured provider', () => {
-      beforeEach( () => {
-        opt.configuredProviderIds = ['password'];
-        TestBed.overrideProvider(EzfaOptions, { useValue: opt});
-      });
-      it('should reject if passed a provider not configured in the options', fakeAsync(() => {
-        let code: string|null = null;
-        const service: EzfaService = TestBed.get(EzfaService);
-        service.getProviderById('facebook.com').catch((err: firebase.FirebaseError) => code = err.code);
-        tick();
-        expect(code).toBe('ezfa/provider-not-configured')
-      }))
-    })
-    describe('custom provider', () => {
-      beforeEach( () => {
-        opt = {
-          configuredProviderIds: allIds,
-          customizedProviders: [{providerId: 'facebook.com', foo: 67}]
-        }
-        TestBed.overrideProvider(EzfaOptions, { useValue: opt});
-      });
-      it('should resolve with custom provider', fakeAsync(() => {
-        let provider: any;
-        const service: EzfaService = TestBed.get(EzfaService);
-        service.getProviderById('facebook.com').then((result: any) => provider = result);
-        tick();
-        expect(provider.foo).toBe(67)
-      }))
-    })
-  })
-
-  describe('get requireDisplayName()', () => {
-    describe('when missing in options', () => {
-      const opt = {};
-      beforeEach(() => {
-        TestBed.overrideProvider(EzfaOptions, { useValue: opt});
-      })
-      it ('should return true',   () => {
-        const service: EzfaService = TestBed.get(EzfaService);
-        expect(service.requireDisplayName).toBe(true);
-      })
-    })
-    describe('when true in options', () => {
-      const opt = {requireDisplayName: true};
-      beforeEach(() => {
-        TestBed.overrideProvider(EzfaOptions, { useValue: opt});
-      })
-      it ('should return true',   () => {
-        const service: EzfaService = TestBed.get(EzfaService);
-        expect(service.requireDisplayName).toBe(true);
-      })
-    })
-    describe('when false in options', () => {
-      const opt = {requireDisplayName: false};
-      beforeEach(() => {
-        TestBed.overrideProvider(EzfaOptions, { useValue: opt});
-      })
-      it ('should return true',   () => {
-        const service: EzfaService = TestBed.get(EzfaService);
-        expect(service.requireDisplayName).toBe(false);
-      })
-    })
-  })
-
-  describe('get requireTos()', () => {
-    describe('when missing in options', () => {
-      const opt = {};
-      beforeEach(() => {
-        TestBed.overrideProvider(EzfaOptions, { useValue: opt});
-      })
-      it ('should return true',   () => {
-        const service: EzfaService = TestBed.get(EzfaService);
-        expect(service.requireTos).toBe(true);
-      })
-    })
-    describe('when true in options', () => {
-      const opt = {requireTos: true};
-      beforeEach(() => {
-        TestBed.overrideProvider(EzfaOptions, { useValue: opt});
-      })
-      it ('should return true',   () => {
-        const service: EzfaService = TestBed.get(EzfaService);
-        expect(service.requireTos).toBe(true);
-      })
-    })
-    describe('when false in options', () => {
-      const opt = {requireTos: false};
-      beforeEach(() => {
-        TestBed.overrideProvider(EzfaOptions, { useValue: opt});
-      })
-      it ('should return true',   () => {
-        const service: EzfaService = TestBed.get(EzfaService);
-        expect(service.requireTos).toBe(false);
-      })
-    })
-  })
-  describe('get sendEmailVerificationLink()', () => {
-    describe('when missing in options', () => {
-      const opt = {};
-      beforeEach(() => {
-        TestBed.overrideProvider(EzfaOptions, { useValue: opt});
-      })
-      it ('should return true',   () => {
-        const service: EzfaService = TestBed.get(EzfaService);
-        expect(service.sendEmailVerificationLink).toBe(true);
-      })
-    })
-    describe('when true in options', () => {
-      const opt = {sendEmailVerificationLink: true};
-      beforeEach(() => {
-        TestBed.overrideProvider(EzfaOptions, { useValue: opt});
-      })
-      it ('should return true',   () => {
-        const service: EzfaService = TestBed.get(EzfaService);
-        expect(service.sendEmailVerificationLink).toBe(true);
-      })
-    })
-    describe('when false in options', () => {
-      const opt = {sendEmailVerificationLink: false};
-      beforeEach(() => {
-        TestBed.overrideProvider(EzfaOptions, { useValue: opt});
-      })
-      it ('should return false',   () => {
-        const service: EzfaService = TestBed.get(EzfaService);
-        expect(service.sendEmailVerificationLink).toBe(false);
-      })
-    })
-  })
-
-
-  describe('set oAuthMethod()', () => {
-    const opt = {oAuthMethod: OAuthMethod.popup};
-    beforeEach(() => {
-      TestBed.overrideProvider(EzfaOptions, { useValue: opt});
-    });
-    it ('should set the value',   () => {
-      const service: EzfaService = TestBed.get(EzfaService);
-      expect(service.oAuthMethod).toBe(OAuthMethod.popup);
-      service.oAuthMethod = OAuthMethod.redirect;
-      expect(service.oAuthMethod).toBe(OAuthMethod.redirect);
-    })
-  })
-
-  describe('get oAuthMethod()', () => {
-    describe ('when no option is set', () => {
-      const opt = {};
-      beforeEach(() => {
-        TestBed.overrideProvider(EzfaOptions, { useValue: opt});
-      });
-      it ('should be redirect',   () => {
-        const service: EzfaService = TestBed.get(EzfaService);
-        expect(service.oAuthMethod).toBe(OAuthMethod.redirect);
-      })
-    })
-    describe ('when an option is set in options', () => {
-      const opt = {oAuthMethod: OAuthMethod.popup};
-      beforeEach(() => {
-        TestBed.overrideProvider(EzfaOptions, { useValue: opt});
-      });
-      it ('should be popup',   () => {
-        const service: EzfaService = TestBed.get(EzfaService);
-        expect(service.oAuthMethod).toBe(OAuthMethod.popup);
-      })
-    })
-    describe ('when an option subsequently set', () => {
-      const opt = {};
-      beforeEach(() => {
-        TestBed.overrideProvider(EzfaOptions, { useValue: opt});
-      });
-      it ('should be popup',   () => {
-        const service: EzfaService = TestBed.get(EzfaService);
-        expect(service.oAuthMethod).toBe(OAuthMethod.redirect);
-        service.oAuthMethod = OAuthMethod.popup;
-        expect(service.oAuthMethod).toBe(OAuthMethod.popup);
-      })
-    })
-  })
-  describe('get providerLabels()', () => {
-    const defaultLabels = new EzfaProviderLabels();
-    describe('when no option is set', () => {
-      const opt = {};
-      beforeEach(() => {
-        TestBed.overrideProvider(EzfaOptions, { useValue: opt});
-      })
-      it ('should return the defaults',   () => {
-        const service: EzfaService = TestBed.get(EzfaService);
-        expect(service.providerLabels['twitter.com']).toBe(defaultLabels['twitter.com']);
-      })
-    })
-    describe('when an incomplete option is set', () => {
-      const opt = {providerLabels: {'twitter.com': 'Tweeter'}};
-      beforeEach(() => {
-        TestBed.overrideProvider(EzfaOptions, { useValue: opt});
-      })
-      it ('should return the value',   () => {
-        const service: EzfaService = TestBed.get(EzfaService);
-        expect(service.providerLabels['twitter.com']).toBe('Tweeter');
-      })
-    })
-  })
-
-  describe('get persistenceLocal()', () => {
-    describe('when it has been disabled', () => {
-      beforeEach(() => {
-        spyOn(localStorage, 'getItem').and.returnValue('yes');
-      });
-      it('should return an observable with a value of false', fakeAsync(() => {
-        const service: EzfaService = TestBed.get(EzfaService);
-        let value;
-        service.persistenceLocal.take(1).subscribe((val: boolean) => value = val);
-        tick();
-        expect(value).toBe(false);
-      }));
-    })
-    describe('when it has not been disabled', () => {
-      beforeEach(() => {
-        spyOn(localStorage, 'getItem').and.returnValue(undefined);
-      });
-      it('should return an observable with a value of true', fakeAsync(() => {
-        const service: EzfaService = TestBed.get(EzfaService);
-        let value;
-        service.persistenceLocal.take(1).subscribe((val: boolean) => value = val);
-        tick();
-        expect(value).toBe(true);
-      }));
-    })
-  })
-  describe('setPersistenceLocal()', () => {
-    const auth = {foo: 8, setPersistence: (val: any): Promise<void> => {
-      return new Promise<void>((resolve) => resolve());
-    }}
-    const fbAuth = {auth: auth};
-    beforeEach(() => {
-      TestBed.overrideProvider(AngularFireAuth, {useValue: fbAuth});
-      spyOn(auth, 'setPersistence').and.callThrough();
-      spyOn(localStorage, 'removeItem').and.callFake(() => {});
-      spyOn(localStorage, 'setItem').and.callFake(() => {});
-    });
-    describe('setting false', () => {
-      it(`should return a promise that resolves after setting the
-        persistence with firebase and storing "yes" in local storage`, fakeAsync(() => {
-        const service: EzfaService = TestBed.get(EzfaService);
-        let value;
-        let resolved = false
-        service.setPersistenceLocal(false).then(() => resolved = true);
-        tick();
-        expect(resolved).toBe(true);
-        expect (auth.setPersistence).toHaveBeenCalledWith(firebase.auth.Auth.Persistence.SESSION);
-        expect(localStorage.setItem).toHaveBeenCalledWith(LOCAL_PERSISTENCE_DISABLED_STORAGE_KEY, 'yes')
-        service.persistenceLocal.take(1).subscribe((val: boolean) => value = val);
-        tick();
-        expect(value).toBe(false);
-      }));
-    })
-    describe('setting true', () => {
-      it(`should return a promise that resolves after setting the
-        persistence with firebase and clearing local storage`, fakeAsync(() => {
-        const service: EzfaService = TestBed.get(EzfaService);
-        let value;
-        let resolved = false
-        service.setPersistenceLocal(true).then(() => resolved = true);
-        tick();
-        expect(resolved).toBe(true);
-        expect (auth.setPersistence).toHaveBeenCalledWith(firebase.auth.Auth.Persistence.LOCAL);
-        expect(localStorage.removeItem).toHaveBeenCalledWith(LOCAL_PERSISTENCE_DISABLED_STORAGE_KEY)
-        service.persistenceLocal.take(1).subscribe((val: boolean) => value = val);
-        tick();
-        expect(value).toBe(true);
-      }));
-    })
-
-  })
-  describe('get/set authRedirectCancelled()', () => {
-    it('should be false to start with', () => {
-      const service: EzfaService = TestBed.get(EzfaService);
-      expect(service.authRedirectCancelled).toBe(false);
-    })
-    it('should be the value set', () => {
-      const service: EzfaService = TestBed.get(EzfaService);
-      expect(service.authRedirectCancelled).toBe(false);
-      service.authRedirectCancelled = true;
-      expect(service.authRedirectCancelled).toBe(true);
-      service.authRedirectCancelled = false;
-      expect(service.authRedirectCancelled).toBe(false);
-
-    })
   });
 
-  describe('get signedIn()', () => {
-    it('should be an observable', () => {
-      const service: EzfaService = TestBed.get(EzfaService);
-      expect(service.signedIn.subscribe).toBeTruthy();
-    })
-  })
-  describe('onSignedIn()', () => {
-    it('should push a new event to the observable', fakeAsync(() => {
-      const service: EzfaService = TestBed.get(EzfaService);
-      let e: any;
-      spyOn(service, 'navigate').and.returnValue(Promise.resolve(true));
-      service.signedIn.subscribe((result:  IAuthUserEvent) => e = result);
-      service.onSignedIn({user: {} as firebase.User, providerId: 'bar'});
-      tick();
-      expect(e.providerId).toBe('bar');
-    }));
-    it('should redirect to account if the redirect is not cancelled', fakeAsync(() => {
-      const service: EzfaService = TestBed.get(EzfaService);
-      spyOn(service, 'navigate').and.returnValue(Promise.resolve(true));
-      service.onSignedIn({user: {} as firebase.User, providerId: 'bar'});
-      tick();
-      expect(service.navigate).toHaveBeenCalledWith('account');
-    }));
-    it('should not redirect to account if the redirect is cancelled', fakeAsync(() => {
-      const service: EzfaService = TestBed.get(EzfaService);
-      spyOn(service, 'navigate').and.returnValue(Promise.resolve(true));
-      service.signedIn.subscribe((result:  IAuthUserEvent) => service.authRedirectCancelled = true);
-      service.onSignedIn({user: {} as firebase.User, providerId: 'bar'});
-      tick();
-      expect(service.navigate).not.toHaveBeenCalledWith('account');
-    }));
-  })
-
-  describe('get signedOut()', () => {
-    it('should be an observable', () => {
-      const service: EzfaService = TestBed.get(EzfaService);
-      expect(service.signedOut.subscribe).toBeTruthy();
-    })
-  })
-
-  describe('onSignedOut()', () => {
-    it('should push a new event to the observable', fakeAsync(() => {
-      const service: EzfaService = TestBed.get(EzfaService);
-      let pushed = false;
-      spyOn(service, 'navigate').and.returnValue(Promise.resolve(true));
-      service.signedOut.subscribe(() => pushed = true);
-      service.onSignedOut();
-      tick();
-      expect(pushed).toBe(true);
-    }));
-    it('should redirect to sign in if the redirect is not cancelled', fakeAsync(() => {
-      const service: EzfaService = TestBed.get(EzfaService);
-      spyOn(service, 'navigate').and.returnValue(Promise.resolve(true));
-      service.onSignedOut();
-      tick();
-      expect(service.navigate).toHaveBeenCalledWith('sign-in');
-    }));
-    it('should not redirect to sign in if the redirect is cancelled', fakeAsync(() => {
-      const service: EzfaService = TestBed.get(EzfaService);
-      spyOn(service, 'navigate').and.returnValue(Promise.resolve(true));
-      service.signedOut.subscribe(() => service.authRedirectCancelled = true);
-      service.onSignedOut();
-      tick();
-      expect(service.navigate).not.toHaveBeenCalledWith('sign-in');
-    }));
-  })
-
-  describe('get providerLinked()', () => {
-    it('should be an observable', () => {
-      const service: EzfaService = TestBed.get(EzfaService);
-      expect(service.providerLinked.subscribe).toBeTruthy();
-    })
-  })
-
-  describe('onProviderLinked()', () => {
-    it('should push a new event to the observable', fakeAsync(() => {
-      const service: EzfaService = TestBed.get(EzfaService);
-      let e: any;
-      service.providerLinked.subscribe((result: IAuthUserEvent) => e = result);
-      service.onProviderLinked({user: {} as firebase.User, providerId: 'bar'});
-      tick();
-      expect(e.providerId).toBe('bar');
-    }));
-  })
-  describe('get providerUnlinked()', () => {
-    it('should be an observable', () => {
-      const service: EzfaService = TestBed.get(EzfaService);
-      expect(service.providerLinked.subscribe).toBeTruthy();
-    })
-  })
-  describe('onProviderUnlinked()', () => {
-    it('should push a new event to the observable', fakeAsync(() => {
-      const service: EzfaService = TestBed.get(EzfaService);
-      let e: any;
-      service.providerUnlinked.subscribe((result: IAuthUserEvent) => e = result);
-      service.onProviderUnlinked({user: {} as firebase.User, providerId: 'bar'});
-      tick();
-      expect(e.providerId).toBe('bar');
-    }));
-  })
-
-  describe('get emailChanged()', () => {
-    it('should be an observable', () => {
-      const service: EzfaService = TestBed.get(EzfaService);
-      expect(service.emailChanged.subscribe).toBeTruthy();
-    })
-  })
-
-  describe('onEmailChanged()', () => {
-    it('should push a new event to the observable', fakeAsync(() => {
-      const service: EzfaService = TestBed.get(EzfaService);
-      let e: any;
-      service.emailChanged.subscribe((result: IAuthEmailChangedEvent) => e = result);
-      service.onEmailChanged({user: {} as firebase.User, oldEmail: 'bar', newEmail: 'foo'});
-      tick();
-      expect(e.oldEmail).toBe('bar');
-    }));
-  })
-
-  describe('get route()', () => {
-    it('should be an observable', () => {
-      const service: EzfaService = TestBed.get(EzfaService);
-      expect(service.route.subscribe).toBeTruthy();
-    })
-  })
-
-  describe('onRoute()', () => {
-    it('should push a new slug to the observable', fakeAsync(() => {
-      const service: EzfaService = TestBed.get(EzfaService);
-      let slug: string | null = null;
-      service.route.subscribe((result: string) => slug = result);
-      service.onRoute('account');
-      tick();
-      expect(slug).toBe('account');
-    }));
-  })
-
   describe('routerLink()', () => {
+    let service: EzfaService;
     beforeEach(() => {
-      TestBed.overrideProvider(EzfaOptions, {useValue: {rootSlug: 'auth'}});
+      service = TestBed.get(EzfaService);
     });
-
     it ('should return an array of string with the rootSlug as the first one', () => {
-      const service: EzfaService = TestBed.get(EzfaService);
       const link = service.routerLink('foo');
       expect(link).toEqual(['/auth', 'foo']);
-    })
+    });
     it ('should return an array of string if the first param is undefined', () => {
-      const service: EzfaService = TestBed.get(EzfaService);
       const link = service.routerLink();
       expect(link).toEqual(['/auth']);
-    })
+    });
+    it ('should return an array of string if the first param is null', () => {
+      const link = service.routerLink(null);
+      expect(link).toEqual(['/auth']);
+    });
+    it ('should return an array of string if the first param is ""', () => {
+      const link = service.routerLink('');
+      expect(link).toEqual(['/auth']);
+    });
   });
 
-  describe('routerLink()', () => {
-    const router = {
-      navigate: (commands: string[], extras: NavigationExtras) => {
-        return Promise.resolve(true);
-      }
-    }
+  describe('navigate()', () => {
+    let service: EzfaService;
     beforeEach(() => {
+      service = TestBed.get(EzfaService);
+    });
+    beforeEach(() => {
+      spyOn(service, 'routerLink').and.callThrough();
       spyOn(router, 'navigate').and.callThrough();
-      TestBed.overrideProvider(EzfaOptions, {useValue: {rootSlug: 'auth'}});
-      TestBed.overrideProvider(Router, {useValue: router});
+    });
+    it ('should call routerLink with the first param', () => {
+      const link = service.navigate('foo');
+      expect(service.routerLink).toHaveBeenCalledWith('foo');
+    });
+    it ('should call router.navigate', () => {
+      const link = service.navigate('foo');
+      expect(router.navigate).toHaveBeenCalledWith(['/auth', 'foo'], undefined);
+    });
+  });
+
+  describe('signedInEvents and onSignedIn', () => {
+    let service: EzfaService;
+    beforeEach(() => {
+      service = TestBed.get(EzfaService);
+    });
+    it ('should return an observable', () => {
+      const anEvent = new EzfaSignedInEvent(MOCK_USER, 'password');
+      let result;
+      service.signedInEvents.take(1).subscribe(e => result = e);
+      service.onSignedIn(anEvent);
+      expect(result).toBe(anEvent);
+    });
+    it ('should allow cancelling the redirect', () => {
+      const anEvent = new EzfaSignedInEvent(MOCK_USER, 'password');
+      expect(anEvent.redirectCancelled).toBe(false);
+      let result;
+      service.signedInEvents.take(1).subscribe(e => {
+        result = e;
+        result.redirectCancelled = true;
+      });
+      service.onSignedIn(anEvent);
+      expect(result).toBe(anEvent);
+      expect(anEvent.redirectCancelled).toBe(true);
+    });
+  });
+
+  describe('signedOutEvents and onSignedOut', () => {
+    let service: EzfaService;
+    beforeEach(() => {
+      service = TestBed.get(EzfaService);
+    });
+    it ('should return an observable', () => {
+      const anEvent = new EzfaSignedOutEvent();
+      let result;
+      service.signedOutEvents.take(1).subscribe(e => result = e);
+      service.onSignedOut(anEvent);
+      expect(result).toBe(anEvent);
+    });
+    it ('should allow cancelling the redirect', () => {
+      const anEvent = new EzfaSignedOutEvent();
+      expect(anEvent.redirectCancelled).toBe(false);
+      let result;
+      service.signedOutEvents.take(1).subscribe(e => {
+        result = e;
+        result.redirectCancelled = true;
+      });
+      service.onSignedOut(anEvent);
+      expect(result).toBe(anEvent);
+      expect(anEvent.redirectCancelled).toBe(true);
+    });
+  });
+
+  describe('emailChangedEvents and onEmailChanged', () => {
+    let service: EzfaService;
+    beforeEach(() => {
+      service = TestBed.get(EzfaService);
+    });
+    it ('should return an observable', () => {
+      const anEvent = new EzfaEmailChangedEvent(MOCK_USER, 'a@b.co', 'b@c.co');
+      let result;
+      service.emailChangedEvents.take(1).subscribe(e => result = e);
+      service.onEmailChanged(anEvent);
+      expect(result).toBe(anEvent);
     });
 
-    it ('should call router.navigate correctly if both params are present', () => {
-      const service: EzfaService = TestBed.get(EzfaService);
-      service.navigate('account', {queryParams: {foo: 'bar'}});
-      expect(router.navigate).toHaveBeenCalledWith(['/auth', 'account'], {queryParams: {foo: 'bar'}})
-    })
-    it ('should call router.navigate correctly if the first param is missing', () => {
-      const service: EzfaService = TestBed.get(EzfaService);
-      service.navigate(null, {queryParams: {foo: 'bar'}});
-      expect(router.navigate).toHaveBeenCalledWith(['/auth'], {queryParams: {foo: 'bar'}})
-    })
-    it ('should call router.navigate correctly if the second param is missing', () => {
-      const service: EzfaService = TestBed.get(EzfaService);
-      service.navigate('account');
-      expect(router.navigate).toHaveBeenCalledWith(['/auth', 'account'], undefined)
-    })
-  })
+  });
 
+  describe('providerLinkedEvents and onProviderLinked', () => {
+    let service: EzfaService;
+    beforeEach(() => {
+      service = TestBed.get(EzfaService);
+    });
+    it ('should return an observable', () => {
+      const anEvent = new EzfaProviderLinkedEvent(MOCK_USER, 'twitter.com', MOCK_USER_CRED);
+      let result;
+      service.providerLinkedEvents.take(1).subscribe(e => result = e);
+      service.onProviderLinked(anEvent);
+      expect(result).toBe(anEvent);
+    });
+
+  });
+
+  describe('providerUnlinkedEvents and onProviderUnlinked', () => {
+    let service: EzfaService;
+    beforeEach(() => {
+      service = TestBed.get(EzfaService);
+    });
+    it ('should return an observable', () => {
+      const anEvent = new EzfaProviderUnlinkedEvent(MOCK_USER, 'twitter.com');
+      let result;
+      service.providerUnlinkedEvents.take(1).subscribe(e => result = e);
+      service.onProviderUnlinked(anEvent);
+      expect(result).toBe(anEvent);
+    });
+  });
+
+  describe('routeChanges and onRouteChange', () => {
+    let service: EzfaService;
+    beforeEach(() => {
+      service = TestBed.get(EzfaService);
+    });
+    it ('should return an observable', () => {
+      let result;
+      service.routeChanges.take(1).subscribe(e => result = e);
+      service.onRouteChange('foo');
+      expect(result).toBe('foo');
+    });
+
+  });
+
+  describe('savedPopupPromise', () => {
+    let service: EzfaService;
+    beforeEach(() => {
+      service = TestBed.get(EzfaService);
+    });
+    it('should work with null', () => {
+      service.savedPopupPromise = null;
+      expect(service.savedPopupPromise).toBe(null);
+    });
+    it('should work with a promise', () => {
+      const p = new Promise<firebase.auth.UserCredential>((resolve) => {});
+      service.savedPopupPromise = p;
+      expect(service.savedPopupPromise).toBe(p);
+    });
+  });
 
 });

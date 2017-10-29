@@ -1,0 +1,14 @@
+<div *ngIf="authService.passwordProviderEnabled">
+  <ezfa-email-sign-in-form [email]="email"></ezfa-email-sign-in-form>
+  <hr *ngIf="authService.oauthProviderIds.length > 0">
+</div>
+
+<div *ngIf="authService.oauthProviderIds.length > 0">
+  <h6 class="text-muted">
+    <span *ngIf="!authService.passwordProviderEnabled">Sign in with...</span>
+    <span *ngIf="authService.passwordProviderEnabled">Or sign in with...</span>
+  </h6>
+  <ezfa-oauth-sign-in></ezfa-oauth-sign-in>
+</div>
+<hr>
+<ezfa-persistence-form></ezfa-persistence-form>

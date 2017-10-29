@@ -6,74 +6,138 @@ import { Subject } from 'rxjs/Subject';
 import { Observable } from 'rxjs/Observable';
 import * as firebase from 'firebase';
 import * as _ from 'lodash';
-import {
-  SUPPORTED_PROVIDERS,
-  LOCAL_PERSISTENCE_DISABLED_STORAGE_KEY,
-  EzfaOptions,  EzfaProviderLabels,
-  IAuthEmailChangedEvent, IAuthUserEvent,
-  OAuthMethod
-} from './ezfa';
+
+import { EzfaOptions } from './ezfa-options.class';
+import { EzfaOauthMethod } from './ezfa-oauth-method.enum';
+import { EzfaProviderLabels } from './ezfa-provider-labels.class';
+import { EzfaSignedInEvent } from './ezfa-signed-in-event.class';
+import { EzfaSignedOutEvent } from './ezfa-signed-out-event.class';
+import { EzfaEmailChangedEvent } from './ezfa-email-changed-event.class';
+import { EzfaProviderLinkedEvent } from './ezfa-provider-linked-event.class';
+import { EzfaProviderUnlinkedEvent } from './ezfa-provider-unlinked-event.class';
 
 @Injectable()
 export class EzfaService {
 
-  private settableOAuthMethod: OAuthMethod|null = null;
-  private persistenceLocal$: BehaviorSubject<boolean>;
-  private pAuthRedirectCancelled = false;
-  private signedIn$: Subject<IAuthUserEvent>;
-  private signedOut$: Subject<void>;
-  private providerLinked$: Subject<IAuthUserEvent>;
-  private providerUnlinked$: Subject<IAuthUserEvent>;
-  private emailChanged$: Subject<IAuthEmailChangedEvent>;
-  private route$: Subject<string>;
 
+  static STORAGE_KEY_PERSISTENCE = 'ezfa-local-persistence-disabled';
+  static ENABLED_PROVIDERS = ['password', 'twitter.com', 'facebook.com', 'google.com', 'github.com'];
+  static ENABLED_OAUTH_PROVIDERS = ['twitter.com', 'facebook.com', 'google.com', 'github.com'];
+  static OUT_OF_BAND_MODES = {
+    resetPassword: 'resetPassword',
+    verifyEmail: 'verifyEmail',
+    recoverEmail: 'recoverEmail'
+  };
+
+  protected oauthMethod$: BehaviorSubject<EzfaOauthMethod>;
+  protected localPersistenceEnabled$: BehaviorSubject<boolean>;
+  protected routeChanges$: Subject<string>;
+  protected signedInEvents$: Subject<EzfaSignedInEvent>;
+  protected signedOutEvents$: Subject<EzfaSignedOutEvent>;
+  protected providerLinkedEvents$: Subject<EzfaProviderLinkedEvent>;
+  protected providerUnlinkedEvents$: Subject<EzfaProviderUnlinkedEvent>;
+  protected emailChangedEvents$: Subject<EzfaEmailChangedEvent>;
+  protected savedPopupPromise_: Promise<firebase.auth.UserCredential> | null = null;
   constructor(
-    protected options: EzfaOptions,
     protected router: Router,
-    protected afAuth: AngularFireAuth
+    protected afAuth: AngularFireAuth,
+    protected options: EzfaOptions
   ) {
-    this.persistenceLocal$ =  new BehaviorSubject(
-      localStorage.getItem(LOCAL_PERSISTENCE_DISABLED_STORAGE_KEY) === 'yes' ? false : true
-    );
-    this.signedIn$ = new Subject();
-    this.signedOut$ = new Subject<void>();
-    this.providerLinked$  = new Subject();
-    this.providerUnlinked$  = new Subject();
-    this.emailChanged$  = new Subject();
-    this.route$  = new Subject();
+    const initialMethod = options.oauthMethod === EzfaOauthMethod.popup ? EzfaOauthMethod.popup : EzfaOauthMethod.redirect;
+    this.oauthMethod$ = new BehaviorSubject(initialMethod);
+    const localPersEnabled = localStorage.getItem(EzfaService.STORAGE_KEY_PERSISTENCE) === 'yes' ? false : true;
+    this.localPersistenceEnabled$ =  new BehaviorSubject(localPersEnabled);
+
+    this.routeChanges$ = new Subject();
+    this.signedInEvents$ = new Subject();
+    this.signedOutEvents$ = new Subject();
+    this.emailChangedEvents$ = new Subject();
+    this.providerLinkedEvents$ = new Subject();
+    this.providerUnlinkedEvents$ = new Subject();
   }
 
   get auth(): firebase.auth.Auth {
     return this.afAuth.auth;
   }
-  get authState(): Observable<firebase.User|null> {
+
+  get authState(): Observable<firebase.User> {
     return this.afAuth.authState;
   }
+
   get applicationLabel(): string {
     return this.options.applicationLabel;
   }
-  /**
-   * The providerIds from the passed configuration.
-   * @return {string[]} [description]
-   */
-  get configuredProviderIds(): string[] {
-    return _.filter(this.options.configuredProviderIds, (id: string) => {
-      return _.includes(SUPPORTED_PROVIDERS, id);
+
+
+  get rootSlug(): string {
+    return this.options.rootSlug;
+  }
+
+  get providerIds(): string[] {
+    return _.filter(this.options.providerIds, id => {
+      return _.includes(EzfaService.ENABLED_PROVIDERS, id);
     });
   }
 
-  get oAuthProviderIds(): string[] {
-    return _.filter(this.configuredProviderIds, (id: string) => {
-      return id !== 'password' && id !== 'phone';
+  set providerIds(ids: string[]) {
+    this.options.providerIds = ids;
+  }
+
+  get oauthProviderIds(): string[] {
+    return _.filter(this.providerIds, id => {
+      return _.includes(EzfaService.ENABLED_OAUTH_PROVIDERS, id);
     });
   }
+
+  get passwordProviderEnabled(): boolean {
+    return _.includes(this.providerIds, 'password');
+  }
+
+
+  get providerLabels(): EzfaProviderLabels {
+    const passed = this.options.providerLabels || {};
+    const def = new EzfaProviderLabels();
+    return _.assign({}, def, passed);
+  }
+
+  get requireDisplayName(): boolean {
+    return this.options.requireDisplayName !== false;
+  }
+
+  set requireDisplayName(b: boolean) {
+    this.options.requireDisplayName = b;
+  }
+
+  get requireTos(): boolean {
+    return this.options.requireTos !== false;
+  }
+
+  set requireTos(b: boolean) {
+    this.options.requireTos = b;
+  }
+
+  get sendEmailVerificationLink(): boolean {
+    return this.options.sendEmailVerificationLink !== false;
+  }
+
+  set sendEmailVerificationLink(b: boolean) {
+    this.options.sendEmailVerificationLink = b;
+  }
+
+  get oauthMethod(): EzfaOauthMethod {
+    return this.oauthMethod$.value;
+  }
+  set oauthMethod(method: EzfaOauthMethod) {
+    this.oauthMethod$.next(method);
+  }
+
 
   public getProviderById(id: string): Promise<firebase.auth.AuthProvider> {
     return new Promise((resolve, reject) => {
-      if (! _.includes(this.configuredProviderIds, id)) {
+      if (! _.includes(this.providerIds, id)) {
         return reject({code: 'ezfa/provider-not-configured'});
       }
-      const customProvider = _.find(this.options.customizedProviders, {providerId: id});
+      const customProvider = _.find(this.options.providers, {providerId: id});
       if (customProvider) {
         return resolve(customProvider);
       }
@@ -87,56 +151,22 @@ export class EzfaService {
     });
   }
 
-  /**
-   * Whether or not to require a "name" on email/password sign up. Defaults to true.
-   * @return {boolean}
-   */
-  get requireDisplayName(): boolean {
-    return this.options.requireDisplayName !== false;
-  }
 
-  /**
-   * Whether or not to require a "I've read the terms of service" check on email/password sign up. Defaults to true.
-   * @return {boolean}
-   */
-  get requireTos(): boolean {
-    return this.options.requireTos !== false;
-  }
 
-  /**
-   * Whether or not to send an email verification on email/password sign up. Defaults to true.
-   * @return {boolean}
-   */
-  get sendEmailVerificationLink(): boolean {
-    return this.options.sendEmailVerificationLink !== false;
-  }
-
-  get oAuthMethod(): OAuthMethod {
-    if (this.settableOAuthMethod) {
-      return this.settableOAuthMethod;
+  routerLink(slug?: string|null): string[] {
+    const commands = ['/' + this.rootSlug];
+    if (slug) {
+      commands.push(slug);
     }
-    if (_.has(this.options, 'oAuthMethod') && this.options.oAuthMethod) {
-      return this.options.oAuthMethod;
-    }
-    return OAuthMethod.redirect;
+    return commands;
+  }
+  navigate(slug?: string|null, extras?: NavigationExtras ): Promise<boolean> {
+    return this.router.navigate(this.routerLink(slug), extras);
   }
 
-  set oAuthMethod(method: OAuthMethod) {
-    this.settableOAuthMethod = method;
-  }
 
-  get rootSlug(): string {
-    return this.options.rootSlug;
-  }
-
-  get providerLabels(): EzfaProviderLabels {
-    const defaultLabels = new EzfaProviderLabels();
-    const passed = this.options.providerLabels || {};
-    return _.assign({}, defaultLabels, passed);
-  }
-
-  get persistenceLocal(): Observable<boolean> {
-    return this.persistenceLocal$.asObservable();
+  get localPersistenceEnabled(): Observable<boolean> {
+    return this.localPersistenceEnabled$.asObservable();
   }
   public setPersistenceLocal(b: boolean): Promise<void> {
     return new Promise<void>((resolve) => {
@@ -145,79 +175,69 @@ export class EzfaService {
       this.auth.setPersistence(persistence)
         .then(() => {
           if (b) {
-            localStorage.removeItem(LOCAL_PERSISTENCE_DISABLED_STORAGE_KEY);
+            localStorage.removeItem(EzfaService.STORAGE_KEY_PERSISTENCE);
           } else {
-            localStorage.setItem(LOCAL_PERSISTENCE_DISABLED_STORAGE_KEY, 'yes');
+            localStorage.setItem(EzfaService.STORAGE_KEY_PERSISTENCE, 'yes');
           }
-          this.persistenceLocal$.next(b);
+          this.localPersistenceEnabled$.next(b);
           resolve();
         });
     });
   }
 
-  get authRedirectCancelled(): boolean {
-    return this.pAuthRedirectCancelled;
-  }
-  set authRedirectCancelled(cancel: boolean) {
-    this.pAuthRedirectCancelled = cancel;
+  get routeChanges(): Observable<string> {
+    return this.routeChanges$.asObservable();
   }
 
-  get signedIn(): Observable<IAuthUserEvent> {
-    return this.signedIn$.asObservable();
+  onRouteChange(route: string) {
+    this.routeChanges$.next(route);
   }
-  public onSignedIn(event: IAuthUserEvent) {
-    this.authRedirectCancelled = false;
-    this.signedIn$.next(event);
-    if (! this.authRedirectCancelled) {
-      this.navigate('account');
-    }
-  }
-  get signedOut(): Observable<void> {
-    return this.signedOut$.asObservable();
-  }
-  public onSignedOut() {
-    this.authRedirectCancelled = false;
-    this.signedOut$.next();
-    if (! this.authRedirectCancelled) {
-      this.navigate('sign-in');
-    }
+  get signedInEvents(): Observable<EzfaSignedInEvent> {
+    return this.signedInEvents$.asObservable();
   }
 
-  get providerLinked(): Observable<IAuthUserEvent> {
-    return this.providerLinked$.asObservable();
-  }
-  public onProviderLinked(event: IAuthUserEvent) {
-    this.providerLinked$.next(event);
-  }
-  get providerUnlinked(): Observable<IAuthUserEvent> {
-    return this.providerUnlinked$.asObservable();
-  }
-  public onProviderUnlinked(event: IAuthUserEvent) {
-    this.providerUnlinked$.next(event);
+  onSignedIn(event: EzfaSignedInEvent) {
+    this.signedInEvents$.next(event);
   }
 
-  get emailChanged(): Observable<IAuthEmailChangedEvent> {
-    return this.emailChanged$.asObservable();
-  }
-  public onEmailChanged(event: IAuthEmailChangedEvent) {
-    this.emailChanged$.next(event);
-  }
-  get route(): Observable<string> {
-    return this.route$.asObservable();
-  }
-  public onRoute(slug: string) {
-    this.route$.next(slug);
+  get signedOutEvents(): Observable<EzfaSignedOutEvent> {
+    return this.signedOutEvents$.asObservable();
   }
 
-  public routerLink(slug?: string|null): string[] {
-    const commands = ['/' + this.rootSlug];
-    if (slug) {
-      commands.push(slug);
-    }
-    return commands;
+  onSignedOut(event: EzfaSignedOutEvent) {
+    this.signedOutEvents$.next(event);
   }
-  public navigate(slug?: string|null, extras?: NavigationExtras ): Promise<boolean> {
-    return this.router.navigate(this.routerLink(slug), extras);
+
+  get emailChangedEvents(): Observable<EzfaEmailChangedEvent> {
+    return this.emailChangedEvents$.asObservable();
   }
+
+  onEmailChanged(event: EzfaEmailChangedEvent) {
+    this.emailChangedEvents$.next(event);
+  }
+
+  get providerLinkedEvents(): Observable<EzfaProviderLinkedEvent> {
+    return this.providerLinkedEvents$.asObservable();
+  }
+
+  onProviderLinked(event: EzfaProviderLinkedEvent) {
+    this.providerLinkedEvents$.next(event);
+  }
+
+  get providerUnlinkedEvents(): Observable<EzfaProviderUnlinkedEvent> {
+    return this.providerUnlinkedEvents$.asObservable();
+  }
+
+  onProviderUnlinked(event: EzfaProviderUnlinkedEvent) {
+    this.providerUnlinkedEvents$.next(event);
+  }
+
+  get savedPopupPromise(): Promise<firebase.auth.UserCredential> | null {
+    return this.savedPopupPromise_;
+  }
+  set savedPopupPromise(promise: Promise<firebase.auth.UserCredential> | null) {
+    this.savedPopupPromise_ = promise;
+  }
+
 
 }
