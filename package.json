@@ -10,7 +10,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git://github.com/nowzoo/simple-firebase-auth.git"
+    "url": "git://github.com/nowzoo/ez-firebase-auth.git"
   },
   "license": "MIT",
   "keywords": [
@@ -21,7 +21,7 @@
     "angularfire"
   ],
   "bugs": {
-    "url": "http://github.com/nowzoo/simple-firebase-auth/issues"
+    "url": "http://github.com/nowzoo/ez-firebase-auth/issues"
   },
   "scripts": {
     "build": "ng-packagr && node build"
