@@ -1,12 +1,12 @@
 {
   "$schema": "./node_modules/@angular/cli/lib/config/schema.json",
   "project": {
-    "name": "ng-cli-webpack-sample"
+    "name": "ez-firebase-auth"
   },
   "apps": [
     {
       "root": "src",
-      "outDir": "dist",
+      "outDir": "demo",
       "assets": [
         "assets",
         "favicon.ico"
@@ -51,7 +51,7 @@
     }
   },
   "defaults": {
-    "styleExt": "css",
+    "styleExt": "scss",
     "component": {}
   }
 }

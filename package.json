@@ -3,7 +3,7 @@
   "description": "Easy Firebase Auth for Angular 4.x",
   "version": "1.0.6",
   "filename": "./src/simple-firebase-auth.js",
-  "homepage": "http://github.com/nowzoo/simple-firebase-auth",
+  "homepage": "http://github.com/nowzoo/ez-firebase-auth",
   "author": {
     "name": "Christopher Carson",
     "url": "http://github.com/nowzoo"
