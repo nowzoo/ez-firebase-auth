@@ -418,4 +418,94 @@ describe('EzfaService', () => {
     });
   });
 
+  describe('get providerLabels', () => {
+    let defs;
+    let service: EzfaService;
+    beforeEach(() => {
+      defs = new EzfaProviderLabels();
+      service = TestBed.get(EzfaService);
+    });
+    it ('should return defaults if labels is not defined', () => {
+      delete options.providerLabels;
+      expect(service.providerLabels).toEqual(jasmine.objectContaining(defs));
+    });
+    it ('should be correct if labels is partially defined', () => {
+      options.providerLabels = {'twitter.com': 'foobar'};
+      expect(service.providerLabels['twitter.com']).toEqual('foobar');
+      expect(service.providerLabels['facebook.com']).toEqual('Facebook');
+    });
+  });
+
+  describe('set requireDisplayName', () => {
+    let service: EzfaService;
+    beforeEach(() => {
+      service = TestBed.get(EzfaService);
+    });
+    it('should set the value', () => {
+      expect(service.requireDisplayName).toBe(true);
+      service.requireDisplayName = false;
+      expect(service.requireDisplayName).toBe(false);
+    });
+  });
+
+  describe('set requireTos', () => {
+    let service: EzfaService;
+    beforeEach(() => {
+      service = TestBed.get(EzfaService);
+    });
+    it('should set the value', () => {
+      expect(service.requireTos).toBe(true);
+      service.requireTos = false;
+      expect(service.requireTos).toBe(false);
+    });
+  });
+
+  describe('set providerIds', () => {
+    let service: EzfaService;
+    beforeEach(() => {
+      service = TestBed.get(EzfaService);
+    });
+    it('should set the value', () => {
+      expect(service.providerIds).toEqual([]);
+      service.providerIds = ['twitter.com'];
+      expect(service.providerIds).toEqual(['twitter.com']);
+    });
+  });
+
+  describe('set sendEmailVerificationLink', () => {
+    let service: EzfaService;
+    beforeEach(() => {
+      service = TestBed.get(EzfaService);
+    });
+    it('should set the value', () => {
+      expect(service.sendEmailVerificationLink).toEqual(true);
+      service.sendEmailVerificationLink = false;
+      expect(service.sendEmailVerificationLink).toEqual(false);
+    });
+  });
+
+  describe('get  oauthProviderIds', () => {
+    let service: EzfaService;
+    beforeEach(() => {
+      service = TestBed.get(EzfaService);
+    });
+    it('should get the value', () => {
+      expect(service.oauthProviderIds).toEqual([]);
+      service.providerIds = ['twitter.com'];
+      expect(service.oauthProviderIds).toEqual(['twitter.com']);
+    });
+  });
+
+  describe('get  passwordProviderEnabled', () => {
+    let service: EzfaService;
+    beforeEach(() => {
+      service = TestBed.get(EzfaService);
+    });
+    it('should get the value', () => {
+      expect(service.passwordProviderEnabled).toEqual(false);
+      service.providerIds = ['twitter.com', 'password'];
+      expect(service.passwordProviderEnabled).toEqual(true);
+    });
+  });
+
 });

@@ -57,7 +57,7 @@ module.exports = function (wallaby) {
 
     testFramework: 'jasmine',
 
-    filesWithNoCoverageCalculated: ['src/**/test.ts'],
+    filesWithNoCoverageCalculated: ['src/**/test.ts', 'src/**/wallabyTest.ts'],
 
     compilers: {
       '**/*.ts': wallaby.compilers.typeScript(compilerOptions)
